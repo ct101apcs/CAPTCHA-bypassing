@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CAPTCHA Demo with AI Attack Visualization</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .full-width-panel {
+            width: 100%;
+            text-align: center;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .center-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .panel {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 48%;
+            min-width: 400px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #333;
+            margin-top: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .captcha-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            width: 255px;
+            margin: 15px auto;
+            border: 1px solid #ccc;
+            padding: 2.5px;
+        }
+
+        .captcha-grid-item {
+            width: 80px;
+            height: 80px;
+            border: 2px solid transparent;
+            box-sizing: border-box;
+            position: relative;
+            background-color: #eee;
+            overflow: hidden;
+        }
+
+        .user-panel .captcha-grid-item {
+            cursor: pointer;
+        }
+
+        .captcha-grid-item img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+        }
+
+        .captcha-grid-item input[type="checkbox"] {
+            display: none;
+        }
+
+        .user-panel .captcha-grid-item.selected {
+            border-color: #007bff;
+        }
+
+        .ai-panel .captcha-grid-item.ai-selected {
+            border-color: #dc3545;
+        }
+
+        .confidence-overlay {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 0.7em;
+            text-align: center;
+            padding: 2px 0;
+            opacity: 0.85;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .message {
+            padding: 10px;
+            margin-top: 15px;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .message.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .transformation-form {
+            margin-bottom: 20px;
+        }
+
+        .description {
+            font-size: 0.9em;
+            color: #555;
+            margin-top: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="full-width-panel">
+        <h1>CAPTCHA Security Demo</h1>
+        <form method="POST" action="/" class="transformation-form">
+            <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 20px;">
+                <div>
+                    <label for="transformation_type">Select Image Transformation:</label>
+                    <select name="transformation_type" id="transformation_type" onchange="this.form.submit()">
+                        {% for key, details in transformations_options.items() %}
+                            <option value="{{ key }}" {% if key == selected_transformation_key %}selected{% endif %}>{{ details.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="attacker_model">Select Attacking Model:</label>
+                    <select name="attacker_model" id="attacker_model" onchange="this.form.submit()">
+                        {% set models = {
+                            'yolov12': 'YOLOv-12',
+                            'resnet18': 'ResNet-18',
+                            'vit': 'Vision Transformer (ViT)'
+                        } %}
+                        {% for key, label in models.items() %}
+                            <option value="{{ key }}" {% if key == selected_attacker_model %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </form>
+
+        <p class="description">
+            Selected Transformation: <strong>{{ current_transform_name }}</strong><br>
+            Selected Attacker Model: <strong>{{ attacker_models_options[selected_attacker_model] }}</strong>
+        </p>
+    </div>
+
+    <div class="center-wrapper">
+        <div class="panel ai-panel">
+            <h2>AI Attacker's Attempt</h2>
+            <p>Target: <strong>"{{ target_category|default('N/A') }}"</strong></p>
+
+            <div class="captcha-grid" id="aiCaptchaGrid">
+                {% for i in range(num_images) %}
+                    {% set prediction = ai_predictions_visual[i] if ai_predictions_visual and i < ai_predictions_visual|length else {'is_selected': False, 'confidence': 0.0} %}
+                    <div class="captcha-grid-item {% if prediction.is_selected %}ai-selected{% endif %}">
+                        {% if image_urls and image_urls[i] %}
+                        <img src="{{ image_urls[i] }}?v={{ cache_buster_value }}" alt="AI view of image {{ i+1 }}">
+                        {% else %}
+                        <span style="display:flex; align-items:center; justify-content:center; height:100%; color:#777;">Img {{i+1}}</span>
+                        {% endif %}
+                        <div class="confidence-overlay">
+                            {% if prediction.is_selected %}Sel {% endif %}Conf: {{ "%.2f"|format(prediction.confidence) }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            {% if ai_message %}
+                <div class="message 
+                    {% if ai_solved_correctly is true %}success
+                    {% elif ai_solved_correctly is false %}error
+                    {% else %}info{% endif %}">
+                    {{ ai_message }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.user-panel .captcha-grid-item').forEach(item => {
+            item.addEventListener('click', function(event) {
+                if (event.target.closest('label') !== this) return;
+                this.classList.toggle('selected');
+                const checkbox = this.querySelector('input[type="checkbox"]');
+                checkbox.checked = !checkbox.checked;
+            });
+        });
+    </script>
+</body>
+</html>
