@@ -5,18 +5,47 @@ import os
 IMAGE_CATEGORIES = ["cat", "dog"] 
 DATASET_PATH = "./Datasets/archive/animals/animals" 
 
-def get_random_image_path(category):
+def get_random_image_paths(category, count=1, exclude_paths=None):
+    """
+    Get multiple unique random image paths from a category.
+    
+    Args:
+        category (str): The category to get images from
+        count (int): Number of unique images to get
+        exclude_paths (set): Set of paths to exclude
+        
+    Returns:
+        list: List of unique image paths
+    """
     category_path = os.path.join(DATASET_PATH, category)
     if not os.path.exists(category_path) or not os.path.isdir(category_path):
         print(f"Warning: Category path {category_path} does not exist or is not a directory.")
-        return None
+        return []
     
     image_files = [f for f in os.listdir(category_path) 
                    if os.path.isfile(os.path.join(category_path, f)) and f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+    
     if not image_files:
         print(f"Warning: No suitable image files found in category {category_path}.")
-        return None
-    return os.path.join(category_path, random.choice(image_files))
+        return []
+        
+    # Convert paths to full paths
+    image_files = [os.path.join(category_path, f) for f in image_files]
+    
+    # Remove excluded paths
+    if exclude_paths:
+        image_files = [f for f in image_files if f not in exclude_paths]
+    
+    if len(image_files) < count:
+        print(f"Warning: Not enough unique images in category {category}. Requested {count}, found {len(image_files)}.")
+        return image_files
+        
+    return random.sample(image_files, count)
+
+def get_random_image_path(category):
+    """Get a single random image path."""
+    paths = get_random_image_paths(category, count=1)
+    return paths[0] if paths else None
 
 def generate_3x3_image_captcha(num_targets_min=2, num_targets_max=4, image_size=(80,80), transformation_func=None):
     """
@@ -47,47 +76,51 @@ def generate_3x3_image_captcha(num_targets_min=2, num_targets_max=4, image_size=
         print("Error: No image categories defined for distractors.")
         return None, None, None
 
-    num_targets = random.randint(num_targets_min, min(num_targets_max, 9)) 
+    num_targets = random.randint(num_targets_min, min(num_targets_max, 9))
     
     grid_pil_images = []
     correct_indices = []
+    used_image_paths = set()
 
-    slots = [False] * 9 
-    if num_targets > 0 :
-        target_positions = random.sample(range(9), num_targets)
-        for i in target_positions:
-            slots[i] = True
-            correct_indices.append(i)
-
-    for i in range(9):
-        is_target = slots[i]
-        category_to_use = target_category if is_target else random.choice(distractor_categories)
-        
-        img_path = get_random_image_path(category_to_use)
-        
-        if img_path:
-            try:
-                img = Image.open(img_path).convert("RGB").resize(image_size)
-            except Exception as e:
-                print(f"Error loading/resizing image {img_path}: {e}")
-                img = Image.new('RGB', image_size, color='gray') 
-                draw = ImageDraw.Draw(img)
-                draw.text((10,10), "Err", fill="red", font=ImageFont.load_default())
-        else: 
-            img = Image.new('RGB', image_size, color='lightgray')
+    # First, get all target images
+    target_images = get_random_image_paths(target_category, count=num_targets, exclude_paths=used_image_paths)
+    if len(target_images) < num_targets:
+        print("Error: Could not get enough unique target images.")
+        return None, None, None
+    
+    # Add paths to used set
+    used_image_paths.update(target_images)
+    
+    # Get positions for target images
+    target_positions = random.sample(range(9), num_targets)
+    for pos in range(9):
+        if pos in target_positions:
+            # Use a target image
+            img_path = target_images.pop()
+            correct_indices.append(pos)
+        else:
+            # Get a distractor image
+            distractor_category = random.choice(distractor_categories)
+            img_path = get_random_image_paths(distractor_category, count=1, exclude_paths=used_image_paths)[0]
+            if not img_path:
+                print(f"Error: Could not get unique distractor image for position {pos}")
+                return None, None, None
+            used_image_paths.add(img_path)
+            
+        try:
+            img = Image.open(img_path).convert("RGB").resize(image_size)
+        except Exception as e:
+            print(f"Error loading/resizing image {img_path}: {e}")
+            img = Image.new('RGB', image_size, color='gray')
             draw = ImageDraw.Draw(img)
-            try:
-                font = ImageFont.truetype("arial.ttf", 15)
-            except IOError:
-                font = ImageFont.load_default()
-            draw.text((10, 10), f"No img\n{category_to_use[:3]}", fill="black", font=font)
-
+            draw.text((10,10), "Err", fill="red", font=ImageFont.load_default())
+            
         if transformation_func:
             try:
-                img = transformation_func(img.copy()) 
+                img = transformation_func(img.copy())
             except Exception as e:
-                print(f"Error applying transformation to image from {category_to_use}: {e}")
-
+                print(f"Error applying transformation to image: {e}")
+                
         grid_pil_images.append(img)
 
     return grid_pil_images, target_category, sorted(correct_indices)
@@ -113,24 +146,24 @@ def best_transform_placeholder(image):
     # image = image.transform(image.size, Image.AFFINE, (1, random.uniform(-0.1,0.1), 0, random.uniform(-0.1,0.1), 1, 0))
     return image.filter(ImageFilter.SMOOTH)
 
-if __name__ == '__main__':
-    if not os.path.exists(DATASET_PATH):
-        os.makedirs(os.path.join(DATASET_PATH, "cat"))
-        os.makedirs(os.path.join(DATASET_PATH, "dog"))
-        print(f"Created dummy '{DATASET_PATH}' and subfolders. Please add images to them.")
+# if __name__ == '__main__':
+#     if not os.path.exists(DATASET_PATH):
+#         os.makedirs(os.path.join(DATASET_PATH, "cat"))
+#         os.makedirs(os.path.join(DATASET_PATH, "dog"))
+#         print(f"Created dummy '{DATASET_PATH}' and subfolders. Please add images to them.")
     
-    print("Testing CAPTCHA generation...")
-    images, target, solution = generate_3x3_image_captcha(transformation_func=simple_blur_transform)
+#     print("Testing CAPTCHA generation...")
+#     images, target, solution = generate_3x3_image_captcha(transformation_func=simple_blur_transform)
     
-    if images:
-        print(f"Generated CAPTCHA for target: '{target}', solution indices: {solution}")
-        composite_w = images[0].width * 3
-        composite_h = images[0].height * 3
-        composite_img = Image.new('RGB', (composite_w, composite_h))
-        for idx, img in enumerate(images):
-            row, col = divmod(idx, 3)
-            composite_img.paste(img, (col * img.width, row * img.height))
-        composite_img.save("test_captcha_grid.png")
-        print("Saved test_captcha_grid.png")
-    else:
-        print("Failed to generate CAPTCHA. Check Datasets setup and categories.")
+#     if images:
+#         print(f"Generated CAPTCHA for target: '{target}', solution indices: {solution}")
+#         composite_w = images[0].width * 3
+#         composite_h = images[0].height * 3
+#         composite_img = Image.new('RGB', (composite_w, composite_h))
+#         for idx, img in enumerate(images):
+#             row, col = divmod(idx, 3)
+#             composite_img.paste(img, (col * img.width, row * img.height))
+#         composite_img.save("test_captcha_grid.png")
+#         print("Saved test_captcha_grid.png")
+#     else:
+#         print("Failed to generate CAPTCHA. Check Datasets setup and categories.")

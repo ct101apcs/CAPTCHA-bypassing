@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session, Response, url_for
+from flask import Flask, render_template, request, session, Response, url_for, redirect
 import io
 import random 
 import os 
@@ -39,13 +39,13 @@ def mock_predict_with_model(selected_model_key, pil_image, target_category_name)
         confidence_ceiling = 0.98
     elif selected_model_key == 'resnet18': 
         base_success_rate = 0.2
-        if target_category_name.lower() in ["cat", "dog", "tree"]: 
+        if target_category_name.lower() in ["cat", "dog"]: 
             target_bonus = 0.25
         confidence_floor = 0.3
         confidence_ceiling = 0.9
     elif selected_model_key == 'vit': 
         base_success_rate = 0.25
-        if target_category_name.lower() in ["cat", "tree", "car"]:
+        if target_category_name.lower() in ["cat", "dog"]:
             target_bonus = 0.2
         confidence_floor = 0.35
         confidence_ceiling = 0.92
@@ -75,6 +75,7 @@ def ensure_session_image_key():
     if 'session_image_store_key' not in session:
         session['session_image_store_key'] = str(uuid.uuid4())
         TEMP_IMAGE_STORE[session['session_image_store_key']] = {}
+        session['needs_new_captcha'] = True
 
 @app.route('/', methods=['GET', 'POST'])
 def index_visual_attack():
@@ -88,9 +89,13 @@ def index_visual_attack():
     if not session_img_key:
         session['session_image_store_key'] = str(uuid.uuid4())
         session_img_key = session['session_image_store_key']
+        session['needs_new_captcha'] = True
         if session_img_key not in TEMP_IMAGE_STORE:
             TEMP_IMAGE_STORE[session_img_key] = {}
 
+    # Handle refresh button click
+    if request.form.get('refresh_captcha'):
+        session['needs_new_captcha'] = True
 
     default_transform_key = list(AVAILABLE_TRANSFORMATIONS.keys())[0]
     selected_transformation_key = request.form.get('transformation_type', session.get('current_transform_key', default_transform_key))
@@ -99,79 +104,94 @@ def index_visual_attack():
     transform_function_to_apply = transformation_details["func"]
     current_transform_name = transformation_details["name"]
 
-    # --- Get Attacker Model ---
+    # Get Attacker Model
     default_attacker_key = list(AVAILABLE_ATTACKER_MODELS.keys())[0]
     selected_attacker_model_key = request.form.get('attacker_model', session.get('current_attacker_key', default_attacker_key))
     session['current_attacker_key'] = selected_attacker_model_key
 
-    # --- Generate New CAPTCHA & Run AI Attack ---
-    # This always runs as there's no separate user submission anymore.
-    # A POST request now means a change in dropdown selection.
-    
-    grid_pil_images, target_category, solution_indices = generate_3x3_image_captcha(
-        transformation_func=transform_function_to_apply
-    )
-
-    if grid_pil_images is None:
-        ai_message = "Error: Could not generate CAPTCHA. Please check image_dataset setup."
-        session.pop('captcha_target_category', None)
-        session.pop('captcha_solution_indices', None)
-        session.pop('ai_predictions_visual', None)
-        session.pop('ai_solved_correctly', None)
-        if session_img_key and session_img_key in TEMP_IMAGE_STORE:
-            TEMP_IMAGE_STORE[session_img_key].pop('captcha_images_data_for_user', None)
-    else:
-        session['captcha_target_category'] = target_category
-        session['captcha_solution_indices'] = solution_indices
-        target_category_display = target_category
-
-        ai_selected_indices = []
-        current_ai_predictions_visual = []
-
-        for i, pil_img in enumerate(grid_pil_images):
-            is_predicted_target, confidence = mock_predict_with_model(selected_attacker_model_key, pil_img.copy(), target_category)
-            current_ai_predictions_visual.append({'is_selected': is_predicted_target, 'confidence': confidence})
-            if is_predicted_target:
-                ai_selected_indices.append(i)
+    # Only generate new CAPTCHA if needed
+    if session.get('needs_new_captcha', True):
+        grid_pil_images, target_category, solution_indices = generate_3x3_image_captcha(
+            transformation_func=transform_function_to_apply
+        )
         
-        ai_selected_indices.sort()
-        if ai_selected_indices == solution_indices:
-            ai_message = f"AI ({AVAILABLE_ATTACKER_MODELS[selected_attacker_model_key]}): CORRECT! (Selected: {ai_selected_indices})"
-            ai_solved_correctly = True
+        if grid_pil_images is None:
+            ai_message = "Error: Could not generate CAPTCHA. Please check image_dataset setup."
+            session.pop('captcha_target_category', None)
+            session.pop('captcha_solution_indices', None)
+            session.pop('ai_predictions_visual', None)
+            session.pop('ai_solved_correctly', None)
+            if session_img_key and session_img_key in TEMP_IMAGE_STORE:
+                TEMP_IMAGE_STORE[session_img_key].pop('captcha_images_data_for_user', None)
         else:
-            ai_message = f"AI ({AVAILABLE_ATTACKER_MODELS[selected_attacker_model_key]}): INCORRECT. (AI: {ai_selected_indices}, Correct: {solution_indices})"
-            ai_solved_correctly = False
-        
-        session['ai_predictions_visual'] = current_ai_predictions_visual 
-        # session['ai_solved_correctly'] = ai_solved_correctly 
-        # session['ai_message'] = ai_message 
-        ai_predictions_visual = current_ai_predictions_visual
+            # Store original images without transformation
+            original_images = []
+            for img in grid_pil_images:
+                img_copy = img.copy()
+                original_images.append(img_copy)
+                
+            session['captcha_target_category'] = target_category
+            session['captcha_solution_indices'] = solution_indices
+            
+            # Store original images in session store
+            if session_img_key not in TEMP_IMAGE_STORE:
+                TEMP_IMAGE_STORE[session_img_key] = {}
+            TEMP_IMAGE_STORE[session_img_key]['original_images'] = original_images
+            session['needs_new_captcha'] = False
+    else:
+        # Retrieve stored original images and apply current transformation
+        original_images = TEMP_IMAGE_STORE[session_img_key].get('original_images', [])
+        if original_images:
+            grid_pil_images = [transform_function_to_apply(img.copy()) for img in original_images]
+            target_category = session.get('captcha_target_category')
+            solution_indices = session.get('captcha_solution_indices')
+        else:
+            session['needs_new_captcha'] = True
+            return redirect(url_for('index_visual_attack'))
 
+    target_category_display = session.get('captcha_target_category', 'N/A')
+    
+    # Process AI predictions
+    ai_selected_indices = []
+    current_ai_predictions_visual = []
 
-        images_data_for_current_session = []
-        for i, pil_img_item in enumerate(grid_pil_images):
-            img_io_bytes = io.BytesIO()
-            pil_img_item.save(img_io_bytes, 'PNG')
-            img_io_bytes.seek(0)
-            images_data_for_current_session.append(img_io_bytes.read())
-        
-        if session_img_key not in TEMP_IMAGE_STORE:
-            TEMP_IMAGE_STORE[session_img_key] = {}
-        TEMP_IMAGE_STORE[session_img_key]['captcha_images_data_for_user'] = images_data_for_current_session
-        
-        image_urls_for_user = [url_for('captcha_image_for_user_grid', grid_index=i) for i in range(9)]
+    for i, pil_img in enumerate(grid_pil_images):
+        is_predicted_target, confidence = mock_predict_with_model(selected_attacker_model_key, pil_img.copy(), target_category)
+        current_ai_predictions_visual.append({'is_selected': is_predicted_target, 'confidence': confidence})
+        if is_predicted_target:
+            ai_selected_indices.append(i)
+    
+    ai_selected_indices.sort()
+    solution_indices = session.get('captcha_solution_indices', [])
+    if ai_selected_indices == solution_indices:
+        ai_message = f"AI ({AVAILABLE_ATTACKER_MODELS[selected_attacker_model_key]}): CORRECT! (Selected: {ai_selected_indices})"
+        ai_solved_correctly = True
+    else:
+        ai_message = f"AI ({AVAILABLE_ATTACKER_MODELS[selected_attacker_model_key]}): INCORRECT. (AI: {ai_selected_indices}, Correct: {solution_indices})"
+        ai_solved_correctly = False
+    
+    session['ai_predictions_visual'] = current_ai_predictions_visual 
+    ai_predictions_visual = current_ai_predictions_visual
 
+    # Save transformed images for display
+    images_data_for_current_session = []
+    for pil_img_item in grid_pil_images:
+        img_io_bytes = io.BytesIO()
+        pil_img_item.save(img_io_bytes, 'PNG')
+        img_io_bytes.seek(0)
+        images_data_for_current_session.append(img_io_bytes.read())
+    
+    TEMP_IMAGE_STORE[session_img_key]['captcha_images_data_for_user'] = images_data_for_current_session
+    image_urls_for_user = [url_for('captcha_image_for_user_grid', grid_index=i) for i in range(9)]
 
     if not ai_predictions_visual or len(ai_predictions_visual) != 9:
         ai_predictions_visual = [{'is_selected': False, 'confidence': 0.0}] * 9
-        if grid_pil_images is None and not ("Error" in ai_message) :
+        if grid_pil_images is None and not ("Error" in ai_message):
              ai_message = "AI Attacker: Waiting for CAPTCHA..."
-
 
     cache_buster = random.randint(100000, 999999)
 
     return render_template('index_visual_attack.html',
-                           # user_message no longer needed
                            ai_message=ai_message,
                            ai_predictions_visual=ai_predictions_visual,
                            ai_solved_correctly=ai_solved_correctly,

@@ -69,11 +69,21 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
-            margin-top: 10px;
+            margin: 10px 5px;
+            transition: background-color 0.2s;
         }
 
         button:hover {
             background-color: #0056b3;
+        }
+
+        .refresh-button {
+            background-color: #28a745;
+            margin-left: 20px;
+        }
+
+        .refresh-button:hover {
+            background-color: #218838;
         }
 
         .captcha-grid {
@@ -172,7 +182,7 @@
     <div class="full-width-panel">
         <h1>CAPTCHA Security Demo</h1>
         <form method="POST" action="/" class="transformation-form">
-            <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 20px;">
+            <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 20px; align-items: flex-end;">
                 <div>
                     <label for="transformation_type">Select Image Transformation:</label>
                     <select name="transformation_type" id="transformation_type" onchange="this.form.submit()">
@@ -184,15 +194,15 @@
                 <div>
                     <label for="attacker_model">Select Attacking Model:</label>
                     <select name="attacker_model" id="attacker_model" onchange="this.form.submit()">
-                        {% set models = {
-                            'yolov12': 'YOLOv-12',
-                            'resnet18': 'ResNet-18',
-                            'vit': 'Vision Transformer (ViT)'
-                        } %}
-                        {% for key, label in models.items() %}
+                        {% for key, label in attacker_models_options.items() %}
                             <option value="{{ key }}" {% if key == selected_attacker_model %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
+                </div>
+                <div>
+                    <button type="submit" name="refresh_captcha" value="true" class="refresh-button">
+                        🔄 New CAPTCHA
+                    </button>
                 </div>
             </div>
         </form>
