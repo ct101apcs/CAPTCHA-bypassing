@@ -11,6 +11,7 @@ from captcha_generator import (
     best_transform_placeholder
 )
 from PIL import Image, ImageDraw, ImageFont
+from model_predictions import predict_with_model
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_key_for_demo_only_v3' 
@@ -33,7 +34,7 @@ def mock_predict_with_model(selected_model_key, pil_image, target_category_name)
 
     if selected_model_key == 'yolov12': 
         base_success_rate = 0.3
-        if target_category_name.lower() in ["car", "dog"]: 
+        if target_category_name.lower() in ["cat", "dog"]: 
             target_bonus = 0.3
         confidence_floor = 0.4
         confidence_ceiling = 0.98
@@ -86,12 +87,11 @@ def index_visual_attack():
     image_urls_for_user = [None]*9 
 
     session_img_key = session.get('session_image_store_key')
-    if not session_img_key:
+    if not session_img_key or session_img_key not in TEMP_IMAGE_STORE:
         session['session_image_store_key'] = str(uuid.uuid4())
         session_img_key = session['session_image_store_key']
+        TEMP_IMAGE_STORE[session_img_key] = {}
         session['needs_new_captcha'] = True
-        if session_img_key not in TEMP_IMAGE_STORE:
-            TEMP_IMAGE_STORE[session_img_key] = {}
 
     # Handle refresh button click
     if request.form.get('refresh_captcha'):
@@ -156,7 +156,7 @@ def index_visual_attack():
     current_ai_predictions_visual = []
 
     for i, pil_img in enumerate(grid_pil_images):
-        is_predicted_target, confidence = mock_predict_with_model(selected_attacker_model_key, pil_img.copy(), target_category)
+        is_predicted_target, confidence = predict_with_model(selected_attacker_model_key, pil_img.copy(), target_category)
         current_ai_predictions_visual.append({'is_selected': is_predicted_target, 'confidence': confidence})
         if is_predicted_target:
             ai_selected_indices.append(i)
