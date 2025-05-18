@@ -6,17 +6,6 @@ IMAGE_CATEGORIES = ["cat", "dog"]
 DATASET_PATH = "./Datasets/archive/animals/animals" 
 
 def get_random_image_paths(category, count=1, exclude_paths=None):
-    """
-    Get multiple unique random image paths from a category.
-    
-    Args:
-        category (str): The category to get images from
-        count (int): Number of unique images to get
-        exclude_paths (set): Set of paths to exclude
-        
-    Returns:
-        list: List of unique image paths
-    """
     category_path = os.path.join(DATASET_PATH, category)
     if not os.path.exists(category_path) or not os.path.isdir(category_path):
         print(f"Warning: Category path {category_path} does not exist or is not a directory.")
@@ -43,7 +32,6 @@ def get_random_image_paths(category, count=1, exclude_paths=None):
     return random.sample(image_files, count)
 
 def get_random_image_path(category):
-    """Get a single random image path."""
     paths = get_random_image_paths(category, count=1)
     return paths[0] if paths else None
 
@@ -132,18 +120,12 @@ def simple_blur_transform(image):
     return image.filter(ImageFilter.GaussianBlur(radius=1.2))
 
 def best_transform_placeholder(image):
-    # Example: Add some noise and a bit of swirl
     draw = ImageDraw.Draw(image)
     width, height = image.size
     for _ in range(50): 
         nx, ny = random.randint(0, width-1), random.randint(0, height-1)
         draw.point((nx,ny), fill=(random.randint(0,50), random.randint(0,50), random.randint(0,50)))
     
-    # A very simple "swirl" like effect (pixel displacement)
-    # This is a placeholder for a more sophisticated geometric transform
-    # For a real swirl, you'd use more complex pixel mapping or libraries like OpenCV
-    # image = image.rotate(random.uniform(-5, 5), expand=False, fillcolor='white')
-    # image = image.transform(image.size, Image.AFFINE, (1, random.uniform(-0.1,0.1), 0, random.uniform(-0.1,0.1), 1, 0))
     return image.filter(ImageFilter.SMOOTH)
 
 # if __name__ == '__main__':

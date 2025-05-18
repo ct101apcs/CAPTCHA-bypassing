@@ -19,7 +19,6 @@ def predict_with_model(selected_model_key, pil_image, target_category_name):
     if selected_model_key == 'resnet18':
         # Convert PIL image to tensor
         transform = transforms.Compose([
-            transforms.Resize((224, 224)),
             transforms.ToTensor(),
         ])
         img_tensor = transform(pil_image)
