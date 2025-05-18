@@ -47,7 +47,7 @@ def get_random_image_path(category):
     paths = get_random_image_paths(category, count=1)
     return paths[0] if paths else None
 
-def generate_3x3_image_captcha(num_targets_min=2, num_targets_max=4, image_size=(80,80), transformation_func=None):
+def generate_3x3_image_captcha(num_targets_min=2, num_targets_max=4, image_size=(224,224), transformation_func=None):
     """
     Generates a 3x3 grid of images for the CAPTCHA.
 

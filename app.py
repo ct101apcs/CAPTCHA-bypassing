@@ -217,7 +217,7 @@ def captcha_image_for_user_grid(grid_index):
     if images_data_list and 0 <= grid_index < len(images_data_list) and images_data_list[grid_index]:
         return Response(images_data_list[grid_index], mimetype='image/png')
     
-    placeholder_img = Image.new('RGB', (80, 80), color='grey')
+    placeholder_img = Image.new('RGB', (224, 224), color='grey')
     draw = ImageDraw.Draw(placeholder_img)
     try:
         font = ImageFont.truetype("arial.ttf", 12)
