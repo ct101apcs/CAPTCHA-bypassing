@@ -3,6 +3,10 @@ import io
 import random 
 import os 
 import uuid 
+import json
+from datetime import datetime
+from pathlib import Path
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from captcha_generator import (
     generate_3x3_image_captcha,
@@ -14,9 +18,96 @@ from PIL import Image, ImageDraw, ImageFont
 from model_predictions import predict_with_model
 
 app = Flask(__name__)
-app.secret_key = 'super_secret_key_for_demo_only_v3' 
+app.secret_key = 'super_secret_key_for_demo_only_v3'
+
+# Add ProxyFix middleware to handle X-Forwarded-For headers
+# x_for=1 means trust the first IP in X-Forwarded-For
+# x_proto=1 means trust X-Forwarded-Proto
+# x_host=1 means trust X-Forwarded-Host
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
 TEMP_IMAGE_STORE = {}
+
+# Create a directory to store access logs if it doesn't exist
+ACCESS_LOGS_DIR = Path("access_logs")
+ACCESS_LOGS_DIR.mkdir(exist_ok=True)
+
+def get_client_ip():
+    """
+    Get the real client IP address by checking various headers.
+    
+    With ProxyFix middleware and ngrok:
+    1. ngrok sets X-Forwarded-For header
+    2. ProxyFix middleware processes this header
+    3. request.remote_addr will contain the actual client IP
+    """
+    # First check if we're behind ngrok
+    ngrok_headers = {
+        'X-Forwarded-For': request.headers.get('X-Forwarded-For'),
+        'X-Real-IP': request.headers.get('X-Real-IP'),
+        'CF-Connecting-IP': request.headers.get('CF-Connecting-IP'),
+        'True-Client-IP': request.headers.get('True-Client-IP')
+    }
+    
+    # If we have X-Forwarded-For from ngrok, use the first IP
+    if ngrok_headers['X-Forwarded-For']:
+        return ngrok_headers['X-Forwarded-For'].split(',')[0].strip()
+    
+    # Fallback to other headers
+    for header, value in ngrok_headers.items():
+        if value:
+            return value.strip()
+    
+    # If no headers found, use remote_addr (which should be correct due to ProxyFix)
+    return request.remote_addr or 'Unknown'
+
+def collect_accessor_info():
+    """Collect and store information about the accessor"""
+    client_ip = get_client_ip()
+    
+    # Get all relevant headers for debugging
+    ip_headers = {
+        'X-Forwarded-For': request.headers.get('X-Forwarded-For'),
+        'X-Real-IP': request.headers.get('X-Real-IP'),
+        'CF-Connecting-IP': request.headers.get('CF-Connecting-IP'),
+        'True-Client-IP': request.headers.get('True-Client-IP'),
+        'Remote-Addr': request.remote_addr
+    }
+    
+    # Filter out None values
+    ip_headers = {k: v for k, v in ip_headers.items() if v is not None}
+    
+    accessor_info = {
+        'timestamp': datetime.now().isoformat(),
+        'ip': {
+            'detected_client_ip': client_ip,
+            'remote_addr': request.remote_addr,
+            'all_ip_headers': ip_headers,
+            'is_ngrok': 'ngrok' in str(request.headers.get('User-Agent', '')).lower()
+        },
+        'user_agent': request.headers.get('User-Agent'),
+        'session_id': session.get('session_image_store_key')
+    }
+    
+    # Store in a single JSON file that gets updated
+    log_file = ACCESS_LOGS_DIR / "access_logs.json"
+    
+    try:
+        if log_file.exists():
+            with open(log_file, 'r') as f:
+                logs = json.load(f)
+        else:
+            logs = []
+            
+        logs.append(accessor_info)
+        
+        with open(log_file, 'w') as f:
+            json.dump(logs, f, indent=2)
+            
+    except Exception as e:
+        print(f"Error writing to log file: {e}")
+    
+    return accessor_info
 
 def mock_predict_with_model(selected_model_key, pil_image, target_category_name):
     """
@@ -73,6 +164,9 @@ AVAILABLE_ATTACKER_MODELS = {
 
 @app.before_request
 def ensure_session_image_key():
+    # Collect accessor info before processing the request
+    collect_accessor_info()
+    
     if 'session_image_store_key' not in session:
         session['session_image_store_key'] = str(uuid.uuid4())
         TEMP_IMAGE_STORE[session['session_image_store_key']] = {}
