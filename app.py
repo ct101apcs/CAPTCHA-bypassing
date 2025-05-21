@@ -10,13 +10,12 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 from captcha_generator import (
     generate_3x3_image_captcha,
-    no_transform,
-    simple_blur_transform,
-    best_transform_placeholder
+    no_transform
 )
 from Transformations.Cartoon.cartoon import cartoon
 from Transformations.BackgroundConfusion.backgroundConfusion import backgroundConfusion
 from Transformations.Sketch.sketch import sketch
+from Transformations.GaussianNoise.gaussianNoise import gaussianNoise
 from PIL import Image, ImageDraw, ImageFont
 from model_predictions import predict_with_model
 
@@ -132,20 +131,17 @@ def mock_predict_with_model(selected_model_key, pil_image, target_category_name)
 
     if selected_model_key == 'yolov12': 
         base_success_rate = 0.3
-        if target_category_name.lower() in ["cat", "dog"]: 
-            target_bonus = 0.3
+        target_bonus = 0.3
         confidence_floor = 0.4
         confidence_ceiling = 0.98
     elif selected_model_key == 'resnet18': 
         base_success_rate = 0.2
-        if target_category_name.lower() in ["cat", "dog"]: 
-            target_bonus = 0.25
+        target_bonus = 0.25
         confidence_floor = 0.3
         confidence_ceiling = 0.9
-    elif selected_model_key == 'vit': 
+    elif selected_model_key == 'yolov8': 
         base_success_rate = 0.25
-        if target_category_name.lower() in ["cat", "dog"]:
-            target_bonus = 0.2
+        target_bonus = 0.2
         confidence_floor = 0.35
         confidence_ceiling = 0.92
 
@@ -160,8 +156,7 @@ def mock_predict_with_model(selected_model_key, pil_image, target_category_name)
 # Define available transformations with their parameters
 AVAILABLE_TRANSFORMATIONS = {
     "none": {"name": "No Transformation (Baseline)", "func": no_transform, "params": {}},
-    "blur": {"name": "Simple Blur", "func": simple_blur_transform, "params": {}},
-    "my_best": {"name": "My Best Transformation (Demo)", "func": best_transform_placeholder, "params": {}},
+    "gaussian_noise": {"name": "Gaussian Noise", "func": gaussianNoise, "params": {"stddev": 0.1}},
     "cartoon": {"name": "Cartoon Effect", "func": cartoon, "params": TRANSFORMATIONS_CONFIG["cartoon"]["parameters"]},
     "background_confusion": {"name": "Background Confusion", "func": backgroundConfusion, "params": TRANSFORMATIONS_CONFIG["backgroundConfusion"]["parameters"]},
     "sketch": {"name": "Sketch Effect", "func": sketch, "params": TRANSFORMATIONS_CONFIG["sketch"]["parameters"]}
@@ -170,7 +165,7 @@ AVAILABLE_TRANSFORMATIONS = {
 AVAILABLE_ATTACKER_MODELS = {
     'yolov12': 'YOLOv-12',  
     'resnet18': 'ResNet-18',
-    'vit': 'Vision Transformer (Mock)'
+    'yolov8': 'YOLOv-8'
 }
 
 @app.before_request
@@ -213,6 +208,9 @@ def index_visual_attack():
     # Get Attacker Model
     default_attacker_key = list(AVAILABLE_ATTACKER_MODELS.keys())[0]
     selected_attacker_model_key = request.form.get('attacker_model', session.get('current_attacker_key', default_attacker_key))
+    # Ensure the selected model is valid
+    if selected_attacker_model_key not in AVAILABLE_ATTACKER_MODELS:
+        selected_attacker_model_key = default_attacker_key
     session['current_attacker_key'] = selected_attacker_model_key
 
     # Only generate new CAPTCHA if needed

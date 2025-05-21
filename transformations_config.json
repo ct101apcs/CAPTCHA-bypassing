@@ -13,5 +13,11 @@
   "sketch": {
     "enabled": true,
     "parameters": {}
+  },
+  "gaussianNoise": {
+    "enabled": true,
+    "parameters": {
+      "stddev": 0.1
+    }
   }
 } 

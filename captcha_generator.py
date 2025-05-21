@@ -1,8 +1,23 @@
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import random
 import os
+from flask import session, redirect, url_for
 
-IMAGE_CATEGORIES = ["cat", "dog"] 
+IMAGE_CATEGORIES = [
+    "antelope", "badger", "bat", "bear", "bee", "beetle", "bison", "boar", 
+    "butterfly", "cat", "caterpillar", "chimpanzee", "cockroach", "cow", 
+    "coyote", "crab", "crow", "deer", "dog", "dolphin", "donkey", "dragonfly", 
+    "duck", "eagle", "elephant", "flamingo", "fly", "fox", "goat", "goldfish", 
+    "goose", "gorilla", "grasshopper", "hamster", "hare", "hedgehog", 
+    "hippopotamus", "hornbill", "horse", "hummingbird", "hyena", "jellyfish", 
+    "kangaroo", "koala", "ladybugs", "leopard", "lion", "lizard", "lobster", 
+    "mosquito", "moth", "mouse", "octopus", "okapi", "orangutan", "otter", 
+    "owl", "ox", "oyster", "panda", "parrot", "pelecaniformes", "penguin", 
+    "pig", "pigeon", "porcupine", "possum", "raccoon", "rat", "reindeer", 
+    "rhinoceros", "sandpiper", "seahorse", "seal", "shark", "sheep", "snake", 
+    "sparrow", "squid", "squirrel", "starfish", "swan", "tiger", "turkey", 
+    "turtle", "whale", "wolf", "wombat", "woodpecker", "zebra"
+]
 DATASET_PATH = "./Datasets/archive/animals/animals" 
 
 def get_random_image_paths(category, count=1, exclude_paths=None):
@@ -115,37 +130,4 @@ def generate_3x3_image_captcha(num_targets_min=2, num_targets_max=4, image_size=
 
 def no_transform(image):
     return image
-
-def simple_blur_transform(image):
-    return image.filter(ImageFilter.GaussianBlur(radius=1.2))
-
-def best_transform_placeholder(image):
-    draw = ImageDraw.Draw(image)
-    width, height = image.size
-    for _ in range(50): 
-        nx, ny = random.randint(0, width-1), random.randint(0, height-1)
-        draw.point((nx,ny), fill=(random.randint(0,50), random.randint(0,50), random.randint(0,50)))
     
-    return image.filter(ImageFilter.SMOOTH)
-
-# if __name__ == '__main__':
-#     if not os.path.exists(DATASET_PATH):
-#         os.makedirs(os.path.join(DATASET_PATH, "cat"))
-#         os.makedirs(os.path.join(DATASET_PATH, "dog"))
-#         print(f"Created dummy '{DATASET_PATH}' and subfolders. Please add images to them.")
-    
-#     print("Testing CAPTCHA generation...")
-#     images, target, solution = generate_3x3_image_captcha(transformation_func=simple_blur_transform)
-    
-#     if images:
-#         print(f"Generated CAPTCHA for target: '{target}', solution indices: {solution}")
-#         composite_w = images[0].width * 3
-#         composite_h = images[0].height * 3
-#         composite_img = Image.new('RGB', (composite_w, composite_h))
-#         for idx, img in enumerate(images):
-#             row, col = divmod(idx, 3)
-#             composite_img.paste(img, (col * img.width, row * img.height))
-#         composite_img.save("test_captcha_grid.png")
-#         print("Saved test_captcha_grid.png")
-#     else:
-#         print("Failed to generate CAPTCHA. Check Datasets setup and categories.")

@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CAPTCHA Demo with AI Attack Visualization</title>
+    <title>CAPTCHA Security Demo</title>
     <style>
         html, body {
             height: 100%;
             margin: 0;
-            font-family: sans-serif;
-            background-color: #f0f0f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
         }
 
         body {
@@ -19,8 +20,9 @@
         .full-width-panel {
             width: 100%;
             text-align: center;
-            padding: 20px;
-            background-color: #f0f0f0;
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .center-wrapper {
@@ -29,52 +31,70 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
+            gap: 20px;
         }
 
         .panel {
             background-color: #fff;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            width: 48%;
-            min-width: 400px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 600px;
+            min-width: 500px;
         }
 
-        h1, h2 {
-            text-align: center;
-            color: #333;
-            margin-top: 0;
+        h1 {
+            font-size: 2em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            font-size: 1.6em;
+            font-weight: 500;
+            margin-bottom: 15px;
         }
 
         label {
             display: block;
             margin-bottom: 5px;
-            font-weight: bold;
+            font-weight: 500;
+            color: #2c3e50;
         }
 
         select {
             width: 100%;
             padding: 8px;
             margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
             box-sizing: border-box;
+            font-size: 1em;
+            background-color: #fff;
+            transition: border-color 0.2s;
+        }
+
+        select:focus {
+            border-color: #007bff;
+            outline: none;
         }
 
         button {
             background-color: #007bff;
             color: white;
-            padding: 10px 15px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 1em;
+            font-weight: 500;
             margin: 10px 5px;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
         }
 
         button:hover {
             background-color: #0056b3;
+            transform: translateY(-1px);
         }
 
         .refresh-button {
@@ -89,25 +109,34 @@
         .captcha-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 5px;
-            width: 255px;
-            margin: 15px auto;
-            border: 1px solid #ccc;
-            padding: 2.5px;
+            gap: 10px;
+            width: 450px;
+            margin: 20px auto;
+            border: 2px solid #e9ecef;
+            padding: 10px;
+            border-radius: 12px;
+            background-color: #fff;
         }
 
         .captcha-grid-item {
-            width: 80px;
-            height: 80px;
-            border: 2px solid transparent;
+            width: 140px;
+            height: 140px;
+            border: 3px solid transparent;
             box-sizing: border-box;
             position: relative;
-            background-color: #eee;
+            background-color: #f8f9fa;
             overflow: hidden;
+            border-radius: 8px;
+            transition: all 0.2s;
         }
 
         .user-panel .captcha-grid-item {
             cursor: pointer;
+        }
+
+        .user-panel .captcha-grid-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .captcha-grid-item img {
@@ -123,58 +152,78 @@
 
         .user-panel .captcha-grid-item.selected {
             border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
         }
 
         .ai-panel .captcha-grid-item.ai-selected {
             border-color: #dc3545;
+            box-shadow: 0 0 0 2px rgba(220,53,69,0.25);
         }
 
         .confidence-overlay {
             position: absolute;
             bottom: 0; left: 0; right: 0;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 0.75);
             color: white;
-            font-size: 0.7em;
+            font-size: 0.8em;
             text-align: center;
-            padding: 2px 0;
-            opacity: 0.85;
+            padding: 4px 0;
+            opacity: 0.9;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
         }
 
         .message {
-            padding: 10px;
-            margin-top: 15px;
-            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
             text-align: center;
-            font-weight: bold;
+            font-weight: 500;
+            font-size: 1.1em;
         }
 
         .message.success {
             background-color: #d4edda;
             color: #155724;
+            border: 1px solid #c3e6cb;
         }
 
         .message.error {
             background-color: #f8d7da;
             color: #721c24;
+            border: 1px solid #f5c6cb;
         }
 
         .message.info {
             background-color: #d1ecf1;
             color: #0c5460;
+            border: 1px solid #bee5eb;
         }
 
         .transformation-form {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .description {
-            font-size: 0.9em;
-            color: #555;
-            margin-top: 15px;
+            font-size: 1em;
+            color: #495057;
+            margin-top: 10px;
             text-align: center;
+            line-height: 1.4;
+        }
+
+        .target-category {
+            font-size: 1.2em;
+            color: #2c3e50;
+            font-weight: 500;
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 8px;
+            display: inline-block;
         }
     </style>
 </head>
@@ -183,7 +232,7 @@
         <h1>CAPTCHA Security Demo</h1>
         <form method="POST" action="/" class="transformation-form">
             <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 20px; align-items: flex-end;">
-                <div>
+                <div style="min-width: 200px;">
                     <label for="transformation_type">Select Image Transformation:</label>
                     <select name="transformation_type" id="transformation_type" onchange="this.form.submit()">
                         {% for key, details in transformations_options.items() %}
@@ -191,7 +240,7 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div>
+                <div style="min-width: 250px;">
                     <label for="attacker_model">Select Attacking Model:</label>
                     <select name="attacker_model" id="attacker_model" onchange="this.form.submit()">
                         {% for key, label in attacker_models_options.items() %}
@@ -216,7 +265,7 @@
     <div class="center-wrapper">
         <div class="panel ai-panel">
             <h2>AI Attacker's Attempt</h2>
-            <p>Target: <strong>"{{ target_category|default('N/A') }}"</strong></p>
+            <p class="target-category">Target: <strong>"{{ target_category|default('N/A') }}"</strong></p>
 
             <div class="captcha-grid" id="aiCaptchaGrid">
                 {% for i in range(num_images) %}

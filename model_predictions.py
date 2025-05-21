@@ -44,14 +44,12 @@ def predict_with_model(selected_model_key, pil_image, target_category_name):
 
     if selected_model_key == 'yolov12': 
         base_success_rate = 0.3
-        if target_category_name.lower() in ["car", "dog"]: 
-            target_bonus = 0.3
+        target_bonus = 0.3
         confidence_floor = 0.4
         confidence_ceiling = 0.98
-    elif selected_model_key == 'vit': 
+    elif selected_model_key == 'yolov8': 
         base_success_rate = 0.25
-        if target_category_name.lower() in ["cat", "dog"]:
-            target_bonus = 0.2
+        target_bonus = 0.2
         confidence_floor = 0.35
         confidence_ceiling = 0.92
 
