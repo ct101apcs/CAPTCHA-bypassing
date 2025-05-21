@@ -1,0 +1,17 @@
+{
+  "backgroundConfusion": {
+    "enabled": true,
+    "parameters": {
+      "block_size": 15,
+      "noise_intensity": 0.6
+    }
+  },
+  "cartoon": {
+    "enabled": true,
+    "parameters": {}
+  },
+  "sketch": {
+    "enabled": true,
+    "parameters": {}
+  }
+} 

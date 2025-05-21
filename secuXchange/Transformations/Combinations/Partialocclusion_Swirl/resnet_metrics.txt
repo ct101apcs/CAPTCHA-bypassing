@@ -1,0 +1,5 @@
+partialOcclusion	{'num_boxes': 5, 'box_min_size': 30, 'box_max_size': 50}
+swirl	{'strength': 1.5, 'radius': 50}
+
+Accuracy: 37.61%
+F1 Score (macro): 0.3929

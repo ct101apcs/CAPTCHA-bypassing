@@ -1,0 +1,5 @@
+sketch	{}
+compression	{'compression_quality': 2}
+
+Accuracy: 9.06%
+F1 Score (macro): 0.0695

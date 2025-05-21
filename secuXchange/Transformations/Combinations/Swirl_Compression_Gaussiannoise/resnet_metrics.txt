@@ -1,0 +1,6 @@
+swirl	{'strength': 1.5, 'radius': 50}
+compression	{'compression_quality': 10}
+gaussianNoise	{'stddev': 0.1}
+
+Accuracy: 12.41%
+F1 Score (macro): 0.1325

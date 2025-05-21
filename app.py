@@ -14,6 +14,9 @@ from captcha_generator import (
     simple_blur_transform,
     best_transform_placeholder
 )
+from Transformations.Cartoon.cartoon import cartoon
+from Transformations.BackgroundConfusion.backgroundConfusion import backgroundConfusion
+from Transformations.Sketch.sketch import sketch
 from PIL import Image, ImageDraw, ImageFont
 from model_predictions import predict_with_model
 
@@ -31,6 +34,10 @@ TEMP_IMAGE_STORE = {}
 # Create a directory to store access logs if it doesn't exist
 ACCESS_LOGS_DIR = Path("access_logs")
 ACCESS_LOGS_DIR.mkdir(exist_ok=True)
+
+# Load transformation settings from JSON
+with open("transformations_config.json", "r") as f:
+    TRANSFORMATIONS_CONFIG = json.load(f)
 
 def get_client_ip():
     """
@@ -150,10 +157,14 @@ def mock_predict_with_model(selected_model_key, pil_image, target_category_name)
         
     return is_target_prediction, confidence
 
+# Define available transformations with their parameters
 AVAILABLE_TRANSFORMATIONS = {
-    "none": {"name": "No Transformation (Baseline)", "func": no_transform},
-    "blur": {"name": "Simple Blur", "func": simple_blur_transform},
-    "my_best": {"name": "My Best Transformation (Demo)", "func": best_transform_placeholder},
+    "none": {"name": "No Transformation (Baseline)", "func": no_transform, "params": {}},
+    "blur": {"name": "Simple Blur", "func": simple_blur_transform, "params": {}},
+    "my_best": {"name": "My Best Transformation (Demo)", "func": best_transform_placeholder, "params": {}},
+    "cartoon": {"name": "Cartoon Effect", "func": cartoon, "params": TRANSFORMATIONS_CONFIG["cartoon"]["parameters"]},
+    "background_confusion": {"name": "Background Confusion", "func": backgroundConfusion, "params": TRANSFORMATIONS_CONFIG["backgroundConfusion"]["parameters"]},
+    "sketch": {"name": "Sketch Effect", "func": sketch, "params": TRANSFORMATIONS_CONFIG["sketch"]["parameters"]}
 }
 
 AVAILABLE_ATTACKER_MODELS = {
@@ -196,6 +207,7 @@ def index_visual_attack():
     session['current_transform_key'] = selected_transformation_key
     transformation_details = AVAILABLE_TRANSFORMATIONS.get(selected_transformation_key, AVAILABLE_TRANSFORMATIONS[default_transform_key])
     transform_function_to_apply = transformation_details["func"]
+    transform_params = transformation_details["params"]
     current_transform_name = transformation_details["name"]
 
     # Get Attacker Model
@@ -206,7 +218,7 @@ def index_visual_attack():
     # Only generate new CAPTCHA if needed
     if session.get('needs_new_captcha', True):
         grid_pil_images, target_category, solution_indices = generate_3x3_image_captcha(
-            transformation_func=transform_function_to_apply
+            transformation_func=lambda img: transform_function_to_apply(img, **transform_params)
         )
         
         if grid_pil_images is None:
@@ -236,7 +248,7 @@ def index_visual_attack():
         # Retrieve stored original images and apply current transformation
         original_images = TEMP_IMAGE_STORE[session_img_key].get('original_images', [])
         if original_images:
-            grid_pil_images = [transform_function_to_apply(img.copy()) for img in original_images]
+            grid_pil_images = [transform_function_to_apply(img.copy(), **transform_params) for img in original_images]
             target_category = session.get('captcha_target_category')
             solution_indices = session.get('captcha_solution_indices')
         else:

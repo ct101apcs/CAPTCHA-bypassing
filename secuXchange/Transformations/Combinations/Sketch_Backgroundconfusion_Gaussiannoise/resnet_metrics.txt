@@ -1,0 +1,6 @@
+sketch	{}
+backgroundConfusion	{'block_size': 10, 'noise_intensity': 0.25}
+gaussianNoise	{'stddev': 0.1}
+
+Accuracy: 11.67%
+F1 Score (macro): 0.0969

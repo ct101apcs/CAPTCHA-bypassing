@@ -1,0 +1,6 @@
+wave	{'intensity': 10, 'frequency': 20.0}
+compression	{'compression_quality': 10}
+gaussianNoise	{'stddev': 0.1}
+
+Accuracy: 17.96%
+F1 Score (macro): 0.2085

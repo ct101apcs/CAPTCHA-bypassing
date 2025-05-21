@@ -1,0 +1,5 @@
+gaussianNoise	{'stddev': 0.1}
+partialOcclusion	{'num_boxes': 5, 'box_min_size': 10, 'box_max_size': 40}
+
+Accuracy: 36.96%
+F1 Score (macro): 0.4412

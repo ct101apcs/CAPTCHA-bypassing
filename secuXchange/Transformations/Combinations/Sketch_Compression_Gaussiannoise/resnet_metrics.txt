@@ -1,0 +1,6 @@
+sketch	{}
+compression	{'compression_quality': 10}
+gaussianNoise	{'stddev': 0.2}
+
+Accuracy: 4.81%
+F1 Score (macro): 0.0454
