@@ -252,7 +252,9 @@
                     <label for="transformation_type">Select Image Transformation:</label>
                     <select name="transformation_type" id="transformation_type" onchange="this.form.submit()" {% if selected_transformation_count > 1 %}disabled{% endif %}>
                         {% for key, details in transformations_options.items() %}
-                            <option value="{{ key }}" {% if key == selected_transformation_key %}selected{% endif %}>{{ details.name }}</option>
+                            <option value="{{ key }}" {% if key == selected_transformation_key %}selected{% endif %}>
+                                {{ details.name }} ({{ "%.2f"|format(details.accuracy[selected_attacker_model]) }}%)
+                            </option>
                         {% endfor %}
                     </select>
                 </div>
@@ -268,9 +270,15 @@
             Selected Model: <strong>{{ attacker_models_options[selected_attacker_model] }}</strong><br>
             Number of Transformations: <strong>{{ selected_transformation_count }}</strong><br>
             {% if selected_transformation_count == 1 %}
-            Selected Transformation: <strong>{{ current_transform_name }}</strong>
+            Selected Transformation: <strong>{{ current_transform_name }}</strong> (Accuracy: {{ "%.2f"|format(current_transform_accuracy) }}%)
             {% else %}
-            Transformations will be randomly selected
+            Transformations will be randomly selected from:
+            {% for key, details in transformations_options.items() %}
+                {% if key != 'none' %}
+                    {{ details.name }} ({{ "%.2f"|format(details.accuracy[selected_attacker_model]) }}%)
+                    {%- if not loop.last %}, {% endif %}
+                {% endif %}
+            {% endfor %}
             {% endif %}
         </p>
     </div>

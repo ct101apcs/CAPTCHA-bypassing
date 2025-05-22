@@ -39,3 +39,4 @@ def backgroundConfusion(img, block_size=15, noise_intensity=0.6):
 
     # Convert back to PIL Image
     return tensor_to_pil(confused_img) 
+    

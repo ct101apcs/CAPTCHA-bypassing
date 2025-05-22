@@ -3,21 +3,9 @@ import random
 import os
 from flask import session, redirect, url_for
 
-IMAGE_CATEGORIES = [
-    "antelope", "badger", "bat", "bear", "bee", "beetle", "bison", "boar", 
-    "butterfly", "cat", "caterpillar", "chimpanzee", "cockroach", "cow", 
-    "coyote", "crab", "crow", "deer", "dog", "dolphin", "donkey", "dragonfly", 
-    "duck", "eagle", "elephant", "flamingo", "fly", "fox", "goat", "goldfish", 
-    "goose", "gorilla", "grasshopper", "hamster", "hare", "hedgehog", 
-    "hippopotamus", "hornbill", "horse", "hummingbird", "hyena", "jellyfish", 
-    "kangaroo", "koala", "ladybugs", "leopard", "lion", "lizard", "lobster", 
-    "mosquito", "moth", "mouse", "octopus", "okapi", "orangutan", "otter", 
-    "owl", "ox", "oyster", "panda", "parrot", "pelecaniformes", "penguin", 
-    "pig", "pigeon", "porcupine", "possum", "raccoon", "rat", "reindeer", 
-    "rhinoceros", "sandpiper", "seahorse", "seal", "shark", "sheep", "snake", 
-    "sparrow", "squid", "squirrel", "starfish", "swan", "tiger", "turkey", 
-    "turtle", "whale", "wolf", "wombat", "woodpecker", "zebra"
-]
+with open("./Datasets/name of the animals.txt", "r") as file:
+    IMAGE_CATEGORIES = [line.strip() for line in file if line.strip()]
+
 DATASET_PATH = "./Datasets/archive/animals/animals" 
 
 def get_random_image_paths(category, count=1, exclude_paths=None):
@@ -33,10 +21,8 @@ def get_random_image_paths(category, count=1, exclude_paths=None):
         print(f"Warning: No suitable image files found in category {category_path}.")
         return []
         
-    # Convert paths to full paths
     image_files = [os.path.join(category_path, f) for f in image_files]
     
-    # Remove excluded paths
     if exclude_paths:
         image_files = [f for f in image_files if f not in exclude_paths]
     

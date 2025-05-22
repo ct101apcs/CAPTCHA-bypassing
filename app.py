@@ -126,51 +126,16 @@ def collect_accessor_info():
     
     return accessor_info
 
-def mock_predict_with_model(selected_model_key, pil_image, target_category_name):
-    """
-    MOCK FUNCTION for model prediction.
-    Behavior changes based on selected_model_key.
-    Returns: (is_predicted_target_bool, confidence_float)
-    """
-    is_target_prediction = False
-    confidence = round(random.uniform(0.1, 0.95), 2)
-    
-    base_success_rate = 0.1 
-    target_bonus = 0      
-    confidence_floor = 0.1
-    confidence_ceiling = 0.95
-
-    if selected_model_key == 'yolov12': 
-        base_success_rate = 0.3
-        target_bonus = 0.3
-        confidence_floor = 0.4
-        confidence_ceiling = 0.98
-    elif selected_model_key == 'resnet18': 
-        base_success_rate = 0.2
-        target_bonus = 0.25
-        confidence_floor = 0.3
-        confidence_ceiling = 0.9
-    elif selected_model_key == 'yolov8': 
-        base_success_rate = 0.25
-        target_bonus = 0.2
-        confidence_floor = 0.35
-        confidence_ceiling = 0.92
-
-    if random.random() < (base_success_rate + target_bonus):
-        is_target_prediction = True
-        confidence = round(random.uniform(confidence_floor, confidence_ceiling), 2)
-    else:
-        confidence = round(random.uniform(0.05, confidence_floor - 0.05 if confidence_floor > 0.1 else 0.3), 2)
-        
-    return is_target_prediction, confidence
-
-# Define available transformations with their parameters
+# Define available transformations with their parameters and accuracy metrics
 AVAILABLE_TRANSFORMATIONS = {
-    "none": {"name": "No Transformation (Baseline)", "func": no_transform, "params": {}},
-    "gaussian_noise": {"name": "Gaussian Noise", "func": gaussianNoise, "params": {"stddev": 0.1}},
-    "cartoon": {"name": "Cartoon Effect", "func": cartoon, "params": TRANSFORMATIONS_CONFIG["cartoon"]["parameters"]},
-    "background_confusion": {"name": "Background Confusion", "func": backgroundConfusion, "params": TRANSFORMATIONS_CONFIG["backgroundConfusion"]["parameters"]},
-    "sketch": {"name": "Sketch Effect", "func": sketch, "params": TRANSFORMATIONS_CONFIG["sketch"]["parameters"]}
+    key: {
+        "name": details["name"],
+        "func": globals()[key.replace('-', '_')] if key != "none" else no_transform,
+        "params": details["parameters"],
+        "accuracy": details["accuracy"]
+    }
+    for key, details in TRANSFORMATIONS_CONFIG["transformations"].items()
+    if details["enabled"]
 }
 
 AVAILABLE_ATTACKER_MODELS = {
@@ -226,7 +191,19 @@ def index_visual_attack():
     selected_transformation_key = request.form.get('transformation_type', session.get('current_transform_key', default_transform_key))
     session['current_transform_key'] = selected_transformation_key
 
-    # Only generate new CAPTCHA if needed
+    # Get current transformation details
+    current_transform_details = AVAILABLE_TRANSFORMATIONS.get(selected_transformation_key, AVAILABLE_TRANSFORMATIONS[default_transform_key])
+    current_transform_name = current_transform_details["name"]
+    current_transform_accuracy = current_transform_details["accuracy"][selected_attacker_model_key]
+
+    # Sort transformations by accuracy for the selected model
+    sorted_transformations = dict(sorted(
+        AVAILABLE_TRANSFORMATIONS.items(),
+        key=lambda x: x[1]["accuracy"][selected_attacker_model_key],
+        reverse=True
+    ))
+
+    # Generate new CAPTCHA
     if session.get('needs_new_captcha', True):
         # First generate with no transformation
         grid_pil_images, target_category, solution_indices = generate_3x3_image_captcha(
@@ -333,9 +310,10 @@ def index_visual_attack():
                            ai_solved_correctly=ai_solved_correctly,
                            target_category=target_category_display,
                            image_urls=image_urls_for_user,
-                           transformations_options=AVAILABLE_TRANSFORMATIONS,
+                           transformations_options=sorted_transformations,
                            selected_transformation_key=selected_transformation_key,
-                           current_transform_name=AVAILABLE_TRANSFORMATIONS[selected_transformation_key]["name"],
+                           current_transform_name=current_transform_name,
+                           current_transform_accuracy=current_transform_accuracy,
                            attacker_models_options=AVAILABLE_ATTACKER_MODELS, 
                            selected_attacker_model=selected_attacker_model_key,
                            selected_transformation_count=selected_transformation_count,

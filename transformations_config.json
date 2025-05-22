@@ -1,23 +1,59 @@
 {
-  "backgroundConfusion": {
-    "enabled": true,
-    "parameters": {
-      "block_size": 15,
-      "noise_intensity": 0.6
-    }
-  },
-  "cartoon": {
-    "enabled": true,
-    "parameters": {}
-  },
-  "sketch": {
-    "enabled": true,
-    "parameters": {}
-  },
-  "gaussianNoise": {
-    "enabled": true,
-    "parameters": {
-      "stddev": 0.1
+  "transformations": {
+    "none": {
+      "name": "No Transformation (Baseline)",
+      "enabled": true,
+      "parameters": {},
+      "accuracy": {
+        "resnet18": 100.0,
+        "yolov8": 100.0,
+        "yolov12": 100.0
+      }
+    },
+    "cartoon": {
+      "name": "Cartoon Effect",
+      "enabled": true,
+      "parameters": {},
+      "accuracy": {
+        "resnet18": 10.33,
+        "yolov8": 10.33,
+        "yolov12": 10.33
+      }
+    },
+    "backgroundConfusion": {
+      "name": "Background Confusion",
+      "enabled": true,
+      "parameters": {
+        "block_size": 15,
+        "noise_intensity": 0.6
+      },
+      "accuracy": {
+        "resnet18": 1.54,
+        "yolov8": 1.54,
+        "yolov12": 1.54
+      }
+    },
+    "sketch": {
+      "name": "Sketch Effect",
+      "enabled": true,
+      "parameters": {},
+      "accuracy": {
+        "resnet18": 36.76,
+        "yolov8": 36.76,
+        "yolov12": 36.76
+      }
+    },
+    "gaussianNoise": {
+      "name": "Gaussian Noise",
+      "enabled": true,
+      "parameters": {
+        "stddev": 0.1
+      },
+      "accuracy": {
+        "resnet18": 63.56,
+        "yolov8": 63.56,
+        "yolov12": 63.56
+      }
     }
   }
 } 
