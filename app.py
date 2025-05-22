@@ -175,7 +175,6 @@ def index_visual_attack():
     ai_solved_correctly = None
     target_category = "N/A"  # Initialize with default value
     target_category_display = "N/A"
-    image_urls_for_user = [None]*9 
 
     session_img_key = session.get('session_image_store_key')
     if not session_img_key or session_img_key not in TEMP_IMAGE_STORE:
@@ -205,6 +204,9 @@ def index_visual_attack():
     # Ensure grid size is between 3 and 6
     selected_grid_size = max(3, min(6, selected_grid_size))
     session['current_grid_size'] = selected_grid_size
+
+    # Initialize image_urls_for_user after we have the grid size
+    image_urls_for_user = [None] * (selected_grid_size * selected_grid_size)
 
     # Get transformation type (only used when count is 1)
     default_transform_key = list(AVAILABLE_TRANSFORMATIONS.keys())[0]
@@ -329,11 +331,29 @@ def index_visual_attack():
         img_io_bytes.seek(0)
         images_data_for_current_session.append(img_io_bytes.read())
     
+    # Ensure we have the correct number of images
+    expected_images = selected_grid_size * selected_grid_size
+    if len(images_data_for_current_session) < expected_images:
+        print(f"Warning: Not enough images generated. Expected {expected_images}, got {len(images_data_for_current_session)}")
+        # Create placeholder images for missing slots
+        for _ in range(expected_images - len(images_data_for_current_session)):
+            placeholder_img = Image.new('RGB', (224, 224), color='grey')
+            draw = ImageDraw.Draw(placeholder_img)
+            try:
+                font = ImageFont.truetype("arial.ttf", 12)
+            except IOError:
+                font = ImageFont.load_default()
+            draw.text((10, 30), "No Img", fill="white", font=font)
+            img_io_bytes = io.BytesIO()
+            placeholder_img.save(img_io_bytes, 'PNG')
+            img_io_bytes.seek(0)
+            images_data_for_current_session.append(img_io_bytes.read())
+    
     TEMP_IMAGE_STORE[session_img_key]['captcha_images_data_for_user'] = images_data_for_current_session
-    image_urls_for_user = [url_for('captcha_image_for_user_grid', grid_index=i) for i in range(selected_grid_size * selected_grid_size)]
+    image_urls_for_user = [url_for('captcha_image_for_user_grid', grid_index=i) for i in range(expected_images)]
 
-    if not ai_predictions_visual or len(ai_predictions_visual) != (selected_grid_size * selected_grid_size):
-        ai_predictions_visual = [{'is_selected': False, 'confidence': 0.0}] * (selected_grid_size * selected_grid_size)
+    if not ai_predictions_visual or len(ai_predictions_visual) != expected_images:
+        ai_predictions_visual = [{'is_selected': False, 'confidence': 0.0}] * expected_images
         if grid_pil_images is None and not ("Error" in ai_message):
              ai_message = "AI Attacker: Waiting for CAPTCHA..."
 

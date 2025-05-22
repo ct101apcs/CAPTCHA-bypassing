@@ -135,6 +135,16 @@ def generate_3x3_image_captcha(transformation_func=no_transform, grid_size=3):
             draw.text((10, 10), "Error", fill="red", font=ImageFont.load_default())
             transformed_images.append(placeholder)
     
+    # Ensure we have the correct number of images
+    if len(transformed_images) < total_grid_size:
+        print(f"Warning: Not enough transformed images. Expected {total_grid_size}, got {len(transformed_images)}")
+        # Create placeholder images for missing slots
+        for _ in range(total_grid_size - len(transformed_images)):
+            placeholder = Image.new('RGB', (224, 224), color='gray')
+            draw = ImageDraw.Draw(placeholder)
+            draw.text((10, 10), "Error", fill="red", font=ImageFont.load_default())
+            transformed_images.append(placeholder)
+    
     # Get indices of target images in the final grid
     solution_indices = []
     for i, img_path in enumerate(all_selected_images):
