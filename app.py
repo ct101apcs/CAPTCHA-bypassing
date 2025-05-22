@@ -99,16 +99,24 @@ def collect_accessor_info():
     log_file = ACCESS_LOGS_DIR / "access_logs.json"
     
     try:
+        logs = []
         if log_file.exists():
-            with open(log_file, 'r') as f:
-                logs = json.load(f)
-        else:
-            logs = []
-            
+            try:
+                with open(log_file, 'r') as f:
+                    logs = json.load(f)
+            except json.JSONDecodeError:
+                # If file is corrupted, start fresh
+                logs = []
+        
         logs.append(accessor_info)
         
-        with open(log_file, 'w') as f:
+        # Write to a temporary file first
+        temp_file = log_file.with_suffix('.tmp')
+        with open(temp_file, 'w') as f:
             json.dump(logs, f, indent=2)
+        
+        # If write was successful, replace the original file
+        temp_file.replace(log_file)
             
     except Exception as e:
         print(f"Error writing to log file: {e}")
@@ -215,8 +223,9 @@ def index_visual_attack():
 
     # Only generate new CAPTCHA if needed
     if session.get('needs_new_captcha', True):
+        # First generate with no transformation
         grid_pil_images, target_category, solution_indices = generate_3x3_image_captcha(
-            transformation_func=lambda img: transform_function_to_apply(img, **transform_params)
+            transformation_func=no_transform
         )
         
         if grid_pil_images is None:
@@ -227,6 +236,7 @@ def index_visual_attack():
             session.pop('ai_solved_correctly', None)
             if session_img_key and session_img_key in TEMP_IMAGE_STORE:
                 TEMP_IMAGE_STORE[session_img_key].pop('captcha_images_data_for_user', None)
+            target_category = "N/A"  # Set default value
         else:
             # Store original images without transformation
             original_images = []
@@ -242,18 +252,20 @@ def index_visual_attack():
                 TEMP_IMAGE_STORE[session_img_key] = {}
             TEMP_IMAGE_STORE[session_img_key]['original_images'] = original_images
             session['needs_new_captcha'] = False
-    else:
-        # Retrieve stored original images and apply current transformation
-        original_images = TEMP_IMAGE_STORE[session_img_key].get('original_images', [])
-        if original_images:
-            grid_pil_images = [transform_function_to_apply(img.copy(), **transform_params) for img in original_images]
-            target_category = session.get('captcha_target_category')
-            solution_indices = session.get('captcha_solution_indices')
-        else:
-            session['needs_new_captcha'] = True
-            return redirect(url_for('index_visual_attack'))
 
-    target_category_display = session.get('captcha_target_category', 'N/A')
+    # Apply the selected transformation to the original images
+    if session_img_key in TEMP_IMAGE_STORE and 'original_images' in TEMP_IMAGE_STORE[session_img_key]:
+        original_images = TEMP_IMAGE_STORE[session_img_key]['original_images']
+        grid_pil_images = []
+        for img in original_images:
+            transformed_img = transform_function_to_apply(img.copy(), **transform_params)
+            grid_pil_images.append(transformed_img)
+        target_category = session.get('captcha_target_category', 'N/A')  # Get target category from session
+    else:
+        session['needs_new_captcha'] = True
+        return redirect(url_for('index_visual_attack'))
+
+    target_category_display = target_category  # Use the already retrieved target_category
     
     # Process AI predictions
     ai_selected_indices = []
