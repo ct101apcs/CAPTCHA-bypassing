@@ -99,6 +99,9 @@ def collect_accessor_info():
     log_file = ACCESS_LOGS_DIR / "access_logs.json"
     
     try:
+        # Ensure the directory exists
+        ACCESS_LOGS_DIR.mkdir(parents=True, exist_ok=True)
+        
         logs = []
         if log_file.exists():
             try:
@@ -191,6 +194,7 @@ def index_visual_attack():
     ai_message = ""
     ai_predictions_visual = []
     ai_solved_correctly = None
+    target_category = "N/A"  # Initialize with default value
     target_category_display = "N/A"
     image_urls_for_user = [None]*9 
 
@@ -205,14 +209,6 @@ def index_visual_attack():
     if request.form.get('refresh_captcha'):
         session['needs_new_captcha'] = True
 
-    default_transform_key = list(AVAILABLE_TRANSFORMATIONS.keys())[0]
-    selected_transformation_key = request.form.get('transformation_type', session.get('current_transform_key', default_transform_key))
-    session['current_transform_key'] = selected_transformation_key
-    transformation_details = AVAILABLE_TRANSFORMATIONS.get(selected_transformation_key, AVAILABLE_TRANSFORMATIONS[default_transform_key])
-    transform_function_to_apply = transformation_details["func"]
-    transform_params = transformation_details["params"]
-    current_transform_name = transformation_details["name"]
-
     # Get Attacker Model
     default_attacker_key = list(AVAILABLE_ATTACKER_MODELS.keys())[0]
     selected_attacker_model_key = request.form.get('attacker_model', session.get('current_attacker_key', default_attacker_key))
@@ -220,6 +216,15 @@ def index_visual_attack():
     if selected_attacker_model_key not in AVAILABLE_ATTACKER_MODELS:
         selected_attacker_model_key = default_attacker_key
     session['current_attacker_key'] = selected_attacker_model_key
+
+    # Get transformation count
+    selected_transformation_count = int(request.form.get('transformation_count', session.get('current_transformation_count', 1)))
+    session['current_transformation_count'] = selected_transformation_count
+
+    # Get transformation type (only used when count is 1)
+    default_transform_key = list(AVAILABLE_TRANSFORMATIONS.keys())[0]
+    selected_transformation_key = request.form.get('transformation_type', session.get('current_transform_key', default_transform_key))
+    session['current_transform_key'] = selected_transformation_key
 
     # Only generate new CAPTCHA if needed
     if session.get('needs_new_captcha', True):
@@ -236,7 +241,6 @@ def index_visual_attack():
             session.pop('ai_solved_correctly', None)
             if session_img_key and session_img_key in TEMP_IMAGE_STORE:
                 TEMP_IMAGE_STORE[session_img_key].pop('captcha_images_data_for_user', None)
-            target_category = "N/A"  # Set default value
         else:
             # Store original images without transformation
             original_images = []
@@ -253,13 +257,29 @@ def index_visual_attack():
             TEMP_IMAGE_STORE[session_img_key]['original_images'] = original_images
             session['needs_new_captcha'] = False
 
-    # Apply the selected transformation to the original images
+    # Apply transformations to the original images
     if session_img_key in TEMP_IMAGE_STORE and 'original_images' in TEMP_IMAGE_STORE[session_img_key]:
         original_images = TEMP_IMAGE_STORE[session_img_key]['original_images']
         grid_pil_images = []
-        for img in original_images:
-            transformed_img = transform_function_to_apply(img.copy(), **transform_params)
-            grid_pil_images.append(transformed_img)
+        
+        if selected_transformation_count == 1:
+            # Apply single selected transformation to all images
+            transform_details = AVAILABLE_TRANSFORMATIONS.get(selected_transformation_key, AVAILABLE_TRANSFORMATIONS[default_transform_key])
+            for img in original_images:
+                transformed_img = transform_details["func"](img.copy(), **transform_details["params"])
+                grid_pil_images.append(transformed_img)
+        else:
+            # Get available transformations (excluding 'none')
+            available_transforms = list(AVAILABLE_TRANSFORMATIONS.items())
+            available_transforms.remove(('none', AVAILABLE_TRANSFORMATIONS['none']))
+            
+            # Randomly select transformations for each image
+            for img in original_images:
+                # Randomly select one transformation for this image
+                transform_key, transform_details = random.choice(available_transforms)
+                transformed_img = transform_details["func"](img.copy(), **transform_details["params"])
+                grid_pil_images.append(transformed_img)
+        
         target_category = session.get('captcha_target_category', 'N/A')  # Get target category from session
     else:
         session['needs_new_captcha'] = True
@@ -315,9 +335,10 @@ def index_visual_attack():
                            image_urls=image_urls_for_user,
                            transformations_options=AVAILABLE_TRANSFORMATIONS,
                            selected_transformation_key=selected_transformation_key,
-                           current_transform_name=current_transform_name,
+                           current_transform_name=AVAILABLE_TRANSFORMATIONS[selected_transformation_key]["name"],
                            attacker_models_options=AVAILABLE_ATTACKER_MODELS, 
-                           selected_attacker_model=selected_attacker_model_key, 
+                           selected_attacker_model=selected_attacker_model_key,
+                           selected_transformation_count=selected_transformation_count,
                            num_images=9,
                            cache_buster_value=cache_buster)
 

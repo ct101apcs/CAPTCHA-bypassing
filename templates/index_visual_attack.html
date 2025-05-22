@@ -232,19 +232,27 @@
         <h1>CAPTCHA Security Demo</h1>
         <form method="POST" action="/" class="transformation-form">
             <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 20px; align-items: flex-end;">
-                <div style="min-width: 200px;">
-                    <label for="transformation_type">Select Image Transformation:</label>
-                    <select name="transformation_type" id="transformation_type" onchange="this.form.submit()">
-                        {% for key, details in transformations_options.items() %}
-                            <option value="{{ key }}" {% if key == selected_transformation_key %}selected{% endif %}>{{ details.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
                 <div style="min-width: 250px;">
                     <label for="attacker_model">Select Attacking Model:</label>
                     <select name="attacker_model" id="attacker_model" onchange="this.form.submit()">
                         {% for key, label in attacker_models_options.items() %}
                             <option value="{{ key }}" {% if key == selected_attacker_model %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="min-width: 200px;">
+                    <label for="transformation_count">Number of Transformations:</label>
+                    <select name="transformation_count" id="transformation_count" onchange="this.form.submit()">
+                        {% for i in range(1, 4) %}
+                            <option value="{{ i }}" {% if i == selected_transformation_count %}selected{% endif %}>{{ i }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="min-width: 200px;">
+                    <label for="transformation_type">Select Image Transformation:</label>
+                    <select name="transformation_type" id="transformation_type" onchange="this.form.submit()" {% if selected_transformation_count > 1 %}disabled{% endif %}>
+                        {% for key, details in transformations_options.items() %}
+                            <option value="{{ key }}" {% if key == selected_transformation_key %}selected{% endif %}>{{ details.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -257,8 +265,13 @@
         </form>
 
         <p class="description">
-            Selected Transformation: <strong>{{ current_transform_name }}</strong><br>
-            Selected Attacker Model: <strong>{{ attacker_models_options[selected_attacker_model] }}</strong>
+            Selected Model: <strong>{{ attacker_models_options[selected_attacker_model] }}</strong><br>
+            Number of Transformations: <strong>{{ selected_transformation_count }}</strong><br>
+            {% if selected_transformation_count == 1 %}
+            Selected Transformation: <strong>{{ current_transform_name }}</strong>
+            {% else %}
+            Transformations will be randomly selected
+            {% endif %}
         </p>
     </div>
 
