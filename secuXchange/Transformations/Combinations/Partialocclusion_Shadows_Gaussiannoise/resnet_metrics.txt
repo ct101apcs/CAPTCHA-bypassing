@@ -1,6 +1,0 @@
-partialOcclusion	{'num_boxes': 5, 'box_min_size': 30, 'box_max_size': 50}
-shadows	{'num_patches': 8, 'patch_size': 50, 'intensity': 0.8}
-gaussianNoise	{'stddev': 0.1}
-
-Accuracy: 22.87%
-F1 Score (macro): 0.2685

@@ -3,6 +3,7 @@
     "none": {
       "name": "No Transformation (Baseline)",
       "enabled": true,
+      "is_demo": true,
       "parameters": {},
       "accuracy": {
         "resnet18": 100.0,
@@ -13,6 +14,7 @@
     "cartoon": {
       "name": "Cartoon Effect",
       "enabled": true,
+      "is_demo": true,
       "parameters": {},
       "accuracy": {
         "resnet18": 10.33,
@@ -23,6 +25,7 @@
     "backgroundConfusion": {
       "name": "Background Confusion",
       "enabled": true,
+      "is_demo": false,
       "parameters": {
         "block_size": 15,
         "noise_intensity": 0.6
@@ -36,6 +39,7 @@
     "sketch": {
       "name": "Sketch Effect",
       "enabled": true,
+      "is_demo": true,
       "parameters": {},
       "accuracy": {
         "resnet18": 36.76,
@@ -46,6 +50,7 @@
     "gaussianNoise": {
       "name": "Gaussian Noise",
       "enabled": true,
+      "is_demo": false,
       "parameters": {
         "stddev": 0.1
       },
@@ -53,6 +58,175 @@
         "resnet18": 63.56,
         "yolov8": 63.56,
         "yolov12": 63.56
+      }
+    },
+    "compression": {
+      "name": "Compression",
+      "enabled": true,
+      "is_demo": true,
+      "parameters": {
+        "compression_quality": 10
+      },
+      "accuracy": {
+        "resnet18": 88.35,
+        "yolov8": 45.0,
+        "yolov12": 45.0
+      }
+    },
+    "partialOcclusion": {
+      "name": "Partial Occlusion",
+      "enabled": true,
+      "is_demo": true,
+      "parameters": {
+        "num_boxes": 5,
+        "box_min_size": 30,
+        "box_max_size": 50
+      },
+      "accuracy": {
+        "resnet18": 90.8,
+        "yolov8": 35.0,
+        "yolov12": 35.0
+      }
+    },
+    "swirl": {
+      "name": "Swirl Effect",
+      "enabled": true,
+      "is_demo": true,
+      "parameters": {
+        "strength": 1.5,
+        "radius": 50
+      },
+      "accuracy": {
+        "resnet18": 74.8,
+        "yolov8": 25.0,
+        "yolov12": 25.0
+      }
+    },
+    "cartoon_partialOcclusion": {
+      "name": "Cartoon + Partial Occlusion",
+      "enabled": true,
+      "is_demo": true,
+      "parameters": {
+        "cartoon": {},
+        "partialOcclusion": {
+          "num_boxes": 5,
+          "box_min_size": 10,
+          "box_max_size": 40
+        }
+      },
+      "accuracy": {
+        "resnet18": 9.57,
+        "yolov8": 5.0,
+        "yolov12": 5.0
+      }
+    },
+    "gaussianNoise_cartoon": {
+      "name": "Gaussian Noise + Cartoon",
+      "enabled": true,
+      "is_demo": true,
+      "parameters": {
+        "gaussianNoise": {"stddev": 0.1},
+        "cartoon": {}
+      },
+      "accuracy": {
+        "resnet18": 4.06,
+        "yolov8": 8.0,
+        "yolov12": 8.0
+      }
+    },
+    "partialOcclusion_cartoon": {
+      "name": "Partial Occlusion + Cartoon",
+      "enabled": true,
+      "is_demo": true,
+      "parameters": {
+        "partialOcclusion": {
+          "num_boxes": 5,
+          "box_min_size": 30,
+          "box_max_size": 50
+        },
+        "cartoon": {}
+      },
+      "accuracy": {
+        "resnet18": 8.37,
+        "yolov8": 7.0,
+        "yolov12": 7.0
+      }
+    },
+    "sketch_compression": {
+      "name": "Sketch + Compression",
+      "enabled": true,
+      "is_demo": true,
+      "parameters": {
+        "sketch": {},
+        "compression": {"compression_quality": 2}
+      },
+      "accuracy": {
+        "resnet18": 9.06,
+        "yolov8": 20.0,
+        "yolov12": 20.0
+      }
+    },
+    "sketch_compression_gaussianNoise": {
+      "name": "Sketch + Compression + Gaussian Noise",
+      "enabled": true,
+      "is_demo": true,
+      "parameters": {
+        "sketch": {},
+        "compression": {"compression_quality": 10},
+        "gaussianNoise": {"stddev": 0.2}
+      },
+      "accuracy": {
+        "resnet18": 4.81,
+        "yolov8": 15.0,
+        "yolov12": 15.0
+      }
+    },
+    "sketch_swirl_gaussianNoise": {
+      "name": "Sketch + Swirl + Gaussian Noise",
+      "enabled": true,
+      "is_demo": true,
+      "parameters": {
+        "sketch": {},
+        "swirl": {"strength": 1.5, "radius": 50},
+        "gaussianNoise": {"stddev": 0.1}
+      },
+      "accuracy": {
+        "resnet18": 9.7,
+        "yolov8": 12.0,
+        "yolov12": 12.0
+      }
+    },
+    "sketch_gaussianNoise": {
+      "name": "Sketch + Gaussian Noise",
+      "enabled": true,
+      "is_demo": true,
+      "parameters": {
+        "sketch": {},
+        "gaussianNoise": {"stddev": 0.2}
+      },
+      "accuracy": {
+        "resnet18": 7.76,
+        "yolov8": 8.0,
+        "yolov12": 8.0
+      }
+    },
+    "sketch_partialOcclusion_gaussianNoise": {
+      "name": "Sketch + Partial Occlusion + Gaussian Noise",
+      "enabled": true,
+      "is_demo": true,
+      "parameters": {
+        "sketch": {},
+        "partialOcclusion": {
+          "num_boxes": 5,
+          "box_min_size": 10,
+          "box_max_size": 40
+        },
+        "gaussianNoise": {"stddev": 0.2}
+      },
+      "accuracy": {
+        "resnet18": 6.20,
+        "yolov8": 6.0,
+        "yolov12": 6.0
       }
     }
   }

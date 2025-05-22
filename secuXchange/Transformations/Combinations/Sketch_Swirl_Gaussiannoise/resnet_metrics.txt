@@ -1,6 +1,0 @@
-sketch	{}
-swirl	{'strength': 1.5, 'radius': 50}
-gaussianNoise	{'stddev': 0.1}
-
-Accuracy: 9.70%
-F1 Score (macro): 0.0777

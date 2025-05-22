@@ -16,6 +16,20 @@ from Transformations.Cartoon.cartoon import cartoon
 from Transformations.BackgroundConfusion.backgroundConfusion import backgroundConfusion
 from Transformations.Sketch.sketch import sketch
 from Transformations.GaussianNoise.gaussianNoise import gaussianNoise
+from Transformations.Compression.compression import compression
+from Transformations.PartialOcclusion.partialOcclusion import partialOcclusion
+from Transformations.Swirl.swirl import swirl
+from Transformations.Combinations import (
+    cartoon_partialOcclusion,
+    gaussianNoise_cartoon,
+    partialOcclusion_cartoon,
+    sketch_compression,
+    sketch_compression_gaussianNoise,
+    sketch_swirl_gaussianNoise,
+    sketch_gaussianNoise,
+    sketch_partialOcclusion_gaussianNoise
+)
+from Transformations.utils import apply_transformation
 from PIL import Image, ImageDraw, ImageFont
 from model_predictions import predict_with_model
 
@@ -135,7 +149,7 @@ AVAILABLE_TRANSFORMATIONS = {
         "accuracy": details["accuracy"]
     }
     for key, details in TRANSFORMATIONS_CONFIG["transformations"].items()
-    if details["enabled"]
+    if details["enabled"] and details.get("is_demo", False)
 }
 
 AVAILABLE_ATTACKER_MODELS = {
@@ -243,18 +257,32 @@ def index_visual_attack():
             # Apply single selected transformation to all images
             transform_details = AVAILABLE_TRANSFORMATIONS.get(selected_transformation_key, AVAILABLE_TRANSFORMATIONS[default_transform_key])
             for img in original_images:
-                transformed_img = transform_details["func"](img.copy(), **transform_details["params"])
+                if selected_transformation_key in ['cartoon_partialOcclusion', 'gaussianNoise_cartoon', 'partialOcclusion_cartoon', 
+                                                 'sketch_compression', 'sketch_compression_gaussianNoise', 'sketch_swirl_gaussianNoise',
+                                                 'sketch_gaussianNoise', 'sketch_partialOcclusion_gaussianNoise']:
+                    # For combinations, pass the parameters from config
+                    transformed_img = transform_details["func"](img.copy(), config_params=transform_details["params"])
+                else:
+                    # For single transformations, use the parameters directly
+                    transformed_img = apply_transformation(img.copy(), transform_details["func"], **transform_details["params"])
                 grid_pil_images.append(transformed_img)
         else:
-            # Get available transformations (excluding 'none')
-            available_transforms = list(AVAILABLE_TRANSFORMATIONS.items())
-            available_transforms.remove(('none', AVAILABLE_TRANSFORMATIONS['none']))
+            # Get available demo transformations (excluding 'none')
+            available_transforms = [(key, details) for key, details in AVAILABLE_TRANSFORMATIONS.items() 
+                                 if key != 'none' and TRANSFORMATIONS_CONFIG["transformations"][key].get("is_demo", False)]
             
             # Randomly select transformations for each image
             for img in original_images:
                 # Randomly select one transformation for this image
                 transform_key, transform_details = random.choice(available_transforms)
-                transformed_img = transform_details["func"](img.copy(), **transform_details["params"])
+                if transform_key in ['cartoon_partialOcclusion', 'gaussianNoise_cartoon', 'partialOcclusion_cartoon', 
+                                   'sketch_compression', 'sketch_compression_gaussianNoise', 'sketch_swirl_gaussianNoise',
+                                   'sketch_gaussianNoise', 'sketch_partialOcclusion_gaussianNoise']:
+                    # For combinations, pass the parameters from config
+                    transformed_img = transform_details["func"](img.copy(), config_params=transform_details["params"])
+                else:
+                    # For single transformations, use the parameters directly
+                    transformed_img = apply_transformation(img.copy(), transform_details["func"], **transform_details["params"])
                 grid_pil_images.append(transformed_img)
         
         target_category = session.get('captcha_target_category', 'N/A')  # Get target category from session

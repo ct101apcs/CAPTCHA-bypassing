@@ -1,6 +1,0 @@
-wave	{'intensity': 10, 'frequency': 20.0}
-partialOcclusion	{'num_boxes': 5, 'box_min_size': 10, 'box_max_size': 40}
-gaussianNoise	{'stddev': 0.1}
-
-Accuracy: 19.06%
-F1 Score (macro): 0.2349

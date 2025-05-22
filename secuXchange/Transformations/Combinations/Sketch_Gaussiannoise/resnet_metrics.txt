@@ -1,5 +1,0 @@
-sketch	{}
-gaussianNoise	{'stddev': 0.2}
-
-Accuracy: 7.76%
-F1 Score (macro): 0.0800

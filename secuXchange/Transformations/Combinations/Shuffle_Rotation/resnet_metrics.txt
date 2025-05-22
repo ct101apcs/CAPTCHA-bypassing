@@ -1,5 +1,0 @@
-shuffle	{'n_parts': 7}
-rotation	{'angle': 15}
-
-Accuracy: 43.57%
-F1 Score (macro): 0.4398

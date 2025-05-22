@@ -1,6 +1,0 @@
-colorRotation	{'hue_shift': 20, 'sat_scale': 1.5, 'val_scale': 1.3}
-sketch	{}
-compression	{'compression_quality': 10}
-
-Accuracy: 13.52%
-F1 Score (macro): 0.1170

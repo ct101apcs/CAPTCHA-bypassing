@@ -1,3 +1,0 @@
-{}
-Accuracy: 1.54%
-F1 Score (macro): 0.0064

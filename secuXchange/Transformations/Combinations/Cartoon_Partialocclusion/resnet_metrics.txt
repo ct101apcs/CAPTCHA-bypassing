@@ -1,5 +1,0 @@
-cartoon	{}
-partialOcclusion	{'num_boxes': 5, 'box_min_size': 10, 'box_max_size': 40}
-
-Accuracy: 9.57%
-F1 Score (macro): 0.0987

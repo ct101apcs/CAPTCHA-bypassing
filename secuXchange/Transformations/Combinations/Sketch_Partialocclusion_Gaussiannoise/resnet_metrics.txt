@@ -1,6 +1,0 @@
-sketch	{}
-partialOcclusion	{'num_boxes': 5, 'box_min_size': 10, 'box_max_size': 40}
-gaussianNoise	{'stddev': 0.2}
-
-Accuracy: 6.20%
-F1 Score (macro): 0.0611

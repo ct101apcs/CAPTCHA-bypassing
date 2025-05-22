@@ -1,5 +1,0 @@
-shadows	{'num_patches': 8, 'patch_size': 50, 'intensity': 0.8}
-swirl	{'strength': 1.5, 'radius': 50}
-
-Accuracy: 62.26%
-F1 Score (macro): 0.6175

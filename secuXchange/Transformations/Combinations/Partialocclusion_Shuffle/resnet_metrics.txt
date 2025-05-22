@@ -1,5 +1,0 @@
-partialOcclusion	{'num_boxes': 5, 'box_min_size': 30, 'box_max_size': 50}
-shuffle	{'n_parts': 7}
-
-Accuracy: 24.46%
-F1 Score (macro): 0.2428

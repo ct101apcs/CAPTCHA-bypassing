@@ -1,5 +1,0 @@
-gaussianNoise	{'stddev': 0.1}
-cartoon	{}
-
-Accuracy: 4.06%
-F1 Score (macro): 0.0441

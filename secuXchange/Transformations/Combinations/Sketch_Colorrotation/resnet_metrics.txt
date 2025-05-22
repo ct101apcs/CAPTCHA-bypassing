@@ -1,5 +1,0 @@
-<function sketch at 0x0000021B8317E520>	{}
-<function colorRotation at 0x0000021B81594FE0>	{'hue_shift': 20, 'sat_scale': 1.5, 'val_scale': 1.3}
-
-Accuracy: 12.56%
-F1 Score (macro): 0.1034

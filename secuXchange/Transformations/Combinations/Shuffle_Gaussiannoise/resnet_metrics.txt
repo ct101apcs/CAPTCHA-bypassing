@@ -1,5 +1,0 @@
-shuffle	{'n_parts': 7}
-gaussianNoise	{'stddev': 0.1}
-
-Accuracy: 25.48%
-F1 Score (macro): 0.2607
