@@ -200,6 +200,12 @@ def index_visual_attack():
     selected_transformation_count = int(request.form.get('transformation_count', session.get('current_transformation_count', 1)))
     session['current_transformation_count'] = selected_transformation_count
 
+    # Get grid size
+    selected_grid_size = int(request.form.get('grid_size', session.get('current_grid_size', 3)))
+    # Ensure grid size is between 3 and 6
+    selected_grid_size = max(3, min(6, selected_grid_size))
+    session['current_grid_size'] = selected_grid_size
+
     # Get transformation type (only used when count is 1)
     default_transform_key = list(AVAILABLE_TRANSFORMATIONS.keys())[0]
     selected_transformation_key = request.form.get('transformation_type', session.get('current_transform_key', default_transform_key))
@@ -221,7 +227,8 @@ def index_visual_attack():
     if session.get('needs_new_captcha', True):
         # First generate with no transformation
         grid_pil_images, target_category, solution_indices = generate_3x3_image_captcha(
-            transformation_func=no_transform
+            transformation_func=no_transform,
+            grid_size=selected_grid_size
         )
         
         if grid_pil_images is None:
@@ -323,10 +330,10 @@ def index_visual_attack():
         images_data_for_current_session.append(img_io_bytes.read())
     
     TEMP_IMAGE_STORE[session_img_key]['captcha_images_data_for_user'] = images_data_for_current_session
-    image_urls_for_user = [url_for('captcha_image_for_user_grid', grid_index=i) for i in range(9)]
+    image_urls_for_user = [url_for('captcha_image_for_user_grid', grid_index=i) for i in range(selected_grid_size * selected_grid_size)]
 
-    if not ai_predictions_visual or len(ai_predictions_visual) != 9:
-        ai_predictions_visual = [{'is_selected': False, 'confidence': 0.0}] * 9
+    if not ai_predictions_visual or len(ai_predictions_visual) != (selected_grid_size * selected_grid_size):
+        ai_predictions_visual = [{'is_selected': False, 'confidence': 0.0}] * (selected_grid_size * selected_grid_size)
         if grid_pil_images is None and not ("Error" in ai_message):
              ai_message = "AI Attacker: Waiting for CAPTCHA..."
 
@@ -345,7 +352,8 @@ def index_visual_attack():
                            attacker_models_options=AVAILABLE_ATTACKER_MODELS, 
                            selected_attacker_model=selected_attacker_model_key,
                            selected_transformation_count=selected_transformation_count,
-                           num_images=9,
+                           selected_grid_size=selected_grid_size,
+                           num_images=selected_grid_size * selected_grid_size,
                            cache_buster_value=cache_buster)
 
 @app.route('/captcha_image_user_grid/<int:grid_index>')

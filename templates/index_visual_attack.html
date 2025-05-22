@@ -17,52 +17,17 @@
             flex-direction: column;
         }
 
-        .full-width-panel {
-            width: 100%;
-            text-align: center;
-            padding: 10px;
-            background-color: #fff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .center-wrapper {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
-            gap: 20px;
         }
 
-        .panel {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            width: 600px;
-            min-width: 500px;
-        }
-
-        h1 {
-            font-size: 2em;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        h2 {
-            font-size: 1.6em;
-            font-weight: 500;
+        .form-group {
             margin-bottom: 15px;
         }
 
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: #2c3e50;
-        }
-
-        select {
+        .form-control {
             width: 100%;
             padding: 8px;
             margin-bottom: 15px;
@@ -74,43 +39,26 @@
             transition: border-color 0.2s;
         }
 
-        select:focus {
+        .form-control:focus {
             border-color: #007bff;
             outline: none;
         }
 
-        button {
-            background-color: #007bff;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: 500;
-            margin: 10px 5px;
-            transition: all 0.2s;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-            transform: translateY(-1px);
-        }
-
-        .refresh-button {
-            background-color: #28a745;
-            margin-left: 20px;
-        }
-
-        .refresh-button:hover {
-            background-color: #218838;
+        .panel {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: min(800px, calc(100vw - 40px));
         }
 
         .captcha-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(var(--grid-size, 3), 1fr);
             gap: 10px;
-            width: 450px;
+            width: 100%;
+            max-width: min(800px, calc(100vw - 40px));
             margin: 20px auto;
             border: 2px solid #e9ecef;
             padding: 10px;
@@ -119,8 +67,7 @@
         }
 
         .captcha-grid-item {
-            width: 140px;
-            height: 140px;
+            aspect-ratio: 1;
             border: 3px solid transparent;
             box-sizing: border-box;
             position: relative;
@@ -130,50 +77,31 @@
             transition: all 0.2s;
         }
 
-        .user-panel .captcha-grid-item {
-            cursor: pointer;
-        }
-
-        .user-panel .captcha-grid-item:hover {
-            transform: scale(1.02);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
         .captcha-grid-item img {
             width: 100%;
             height: 100%;
-            display: block;
             object-fit: cover;
         }
 
-        .captcha-grid-item input[type="checkbox"] {
-            display: none;
+        .ai-selected {
+            border-color: #28a745;
         }
 
-        .user-panel .captcha-grid-item.selected {
-            border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
-        }
-
-        .ai-panel .captcha-grid-item.ai-selected {
+        .ai-selected.incorrect {
             border-color: #dc3545;
-            box-shadow: 0 0 0 2px rgba(220,53,69,0.25);
         }
 
         .confidence-overlay {
             position: absolute;
-            bottom: 0; left: 0; right: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
             background-color: rgba(0, 0, 0, 0.75);
             color: white;
             font-size: 0.8em;
             text-align: center;
             padding: 4px 0;
             opacity: 0.9;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            border-bottom-left-radius: 8px;
-            border-bottom-right-radius: 8px;
         }
 
         .message {
@@ -203,18 +131,6 @@
             border: 1px solid #bee5eb;
         }
 
-        .transformation-form {
-            margin-bottom: 15px;
-        }
-
-        .description {
-            font-size: 1em;
-            color: #495057;
-            margin-top: 10px;
-            text-align: center;
-            line-height: 1.4;
-        }
-
         .target-category {
             font-size: 1.2em;
             color: #2c3e50;
@@ -225,40 +141,154 @@
             border-radius: 8px;
             display: inline-block;
         }
+
+        .refresh-button {
+            background-color: #28a745;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            margin: 10px 5px;
+            transition: all 0.2s;
+        }
+
+        .refresh-button:hover {
+            background-color: #218838;
+        }
+
+        .form-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+            margin-bottom: 0;
+        }
+
+        .form-group:last-child {
+            flex: 0 0 auto;
+        }
+
+        .center-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            width: 100%;
+        }
+
+        /* Adjust gap and padding based on grid size */
+        .captcha-grid[style*="--grid-size: 3"] {
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .captcha-grid[style*="--grid-size: 4"] {
+            gap: 8px;
+            padding: 8px;
+        }
+
+        .captcha-grid[style*="--grid-size: 5"] {
+            gap: 6px;
+            padding: 6px;
+        }
+
+        .captcha-grid[style*="--grid-size: 6"] {
+            gap: 4px;
+            padding: 4px;
+        }
+
+        /* Adjust confidence overlay font size based on grid size */
+        .captcha-grid[style*="--grid-size: 3"] .confidence-overlay {
+            font-size: 0.8em;
+        }
+
+        .captcha-grid[style*="--grid-size: 4"] .confidence-overlay {
+            font-size: 0.7em;
+        }
+
+        .captcha-grid[style*="--grid-size: 5"] .confidence-overlay {
+            font-size: 0.6em;
+        }
+
+        .captcha-grid[style*="--grid-size: 6"] .confidence-overlay {
+            font-size: 0.5em;
+        }
+
+        /* Adjust panel padding based on grid size */
+        .panel[data-grid-size="3"] {
+            padding: 20px;
+        }
+
+        .panel[data-grid-size="4"] {
+            padding: 16px;
+        }
+
+        .panel[data-grid-size="5"] {
+            padding: 12px;
+        }
+
+        .panel[data-grid-size="6"] {
+            padding: 8px;
+        }
     </style>
 </head>
 <body>
-    <div class="full-width-panel">
-        <h1>CAPTCHA Security Demo</h1>
-        <form method="POST" action="/" class="transformation-form">
-            <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 20px; align-items: flex-end;">
-                <div style="min-width: 250px;">
-                    <label for="attacker_model">Select Attacking Model:</label>
-                    <select name="attacker_model" id="attacker_model" onchange="this.form.submit()">
-                        {% for key, label in attacker_models_options.items() %}
-                            <option value="{{ key }}" {% if key == selected_attacker_model %}selected{% endif %}>{{ label }}</option>
+    <div class="container">
+        <h1>Visual CAPTCHA Attack Demo</h1>
+        
+        <form method="POST" action="{{ url_for('index_visual_attack') }}">
+            <div class="form-controls">
+                <div class="form-group">
+                    <label for="attacker_model">Select Attacker Model:</label>
+                    <select class="form-control" id="attacker_model" name="attacker_model" onchange="this.form.submit()">
+                        {% for key, name in attacker_models_options.items() %}
+                        <option value="{{ key }}" {% if selected_attacker_model == key %}selected{% endif %}>{{ name }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div style="min-width: 200px;">
+
+                <div class="form-group">
                     <label for="transformation_count">Number of Transformations:</label>
-                    <select name="transformation_count" id="transformation_count" onchange="this.form.submit()">
-                        {% for i in range(1, 4) %}
-                            <option value="{{ i }}" {% if i == selected_transformation_count %}selected{% endif %}>{{ i }}</option>
-                        {% endfor %}
+                    <select class="form-control" id="transformation_count" name="transformation_count" onchange="this.form.submit()">
+                        <option value="1" {% if selected_transformation_count == 1 %}selected{% endif %}>1</option>
+                        <option value="2" {% if selected_transformation_count == 2 %}selected{% endif %}>2</option>
+                        <option value="3" {% if selected_transformation_count == 3 %}selected{% endif %}>3</option>
                     </select>
                 </div>
-                <div style="min-width: 200px;">
+
+                <div class="form-group">
+                    <label for="grid_size">Grid Size:</label>
+                    <select class="form-control" id="grid_size" name="grid_size" onchange="this.form.submit()">
+                        <option value="3" {% if selected_grid_size == 3 %}selected{% endif %}>3x3</option>
+                        <option value="4" {% if selected_grid_size == 4 %}selected{% endif %}>4x4</option>
+                        <option value="5" {% if selected_grid_size == 5 %}selected{% endif %}>5x5</option>
+                        <option value="6" {% if selected_grid_size == 6 %}selected{% endif %}>6x6</option>
+                    </select>
+                </div>
+
+                {% if selected_transformation_count == 1 %}
+                <div class="form-group">
                     <label for="transformation_type">Select Image Transformation:</label>
-                    <select name="transformation_type" id="transformation_type" onchange="this.form.submit()" {% if selected_transformation_count > 1 %}disabled{% endif %}>
+                    <select class="form-control" id="transformation_type" name="transformation_type" onchange="this.form.submit()">
                         {% for key, details in transformations_options.items() %}
-                            <option value="{{ key }}" {% if key == selected_transformation_key %}selected{% endif %}>
-                                {{ details.name }} ({{ "%.2f"|format(details.accuracy[selected_attacker_model]) }}%)
-                            </option>
+                        <option value="{{ key }}" {% if key == selected_transformation_key %}selected{% endif %}>
+                            {{ details.name }} ({{ "%.2f"|format(details.accuracy[selected_attacker_model]) }}%)
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
-                <div>
+                {% endif %}
+
+                <div class="form-group">
                     <button type="submit" name="refresh_captcha" value="true" class="refresh-button">
                         🔄 New CAPTCHA
                     </button>
@@ -269,6 +299,7 @@
         <p class="description">
             Selected Model: <strong>{{ attacker_models_options[selected_attacker_model] }}</strong><br>
             Number of Transformations: <strong>{{ selected_transformation_count }}</strong><br>
+            Grid Size: <strong>{{ selected_grid_size }}x{{ selected_grid_size }}</strong><br>
             {% if selected_transformation_count == 1 %}
             Selected Transformation: <strong>{{ current_transform_name }}</strong> (Accuracy: {{ "%.2f"|format(current_transform_accuracy) }}%)
             {% else %}
@@ -284,12 +315,12 @@
     </div>
 
     <div class="center-wrapper">
-        <div class="panel ai-panel">
+        <div class="panel ai-panel" data-grid-size="{{ selected_grid_size }}">
             <h2>AI Attacker's Attempt</h2>
             <p class="target-category">Target: <strong>"{{ target_category|default('N/A') }}"</strong></p>
 
-            <div class="captcha-grid" id="aiCaptchaGrid">
-                {% for i in range(num_images) %}
+            <div class="captcha-grid" style="--grid-size: {{ selected_grid_size }}">
+                {% for i in range(selected_grid_size * selected_grid_size) %}
                     {% set prediction = ai_predictions_visual[i] if ai_predictions_visual and i < ai_predictions_visual|length else {'is_selected': False, 'confidence': 0.0} %}
                     <div class="captcha-grid-item {% if prediction.is_selected %}ai-selected{% endif %}">
                         {% if image_urls and image_urls[i] %}
@@ -314,16 +345,5 @@
             {% endif %}
         </div>
     </div>
-
-    <script>
-        document.querySelectorAll('.user-panel .captcha-grid-item').forEach(item => {
-            item.addEventListener('click', function(event) {
-                if (event.target.closest('label') !== this) return;
-                this.classList.toggle('selected');
-                const checkbox = this.querySelector('input[type="checkbox"]');
-                checkbox.checked = !checkbox.checked;
-            });
-        });
-    </script>
 </body>
 </html>
