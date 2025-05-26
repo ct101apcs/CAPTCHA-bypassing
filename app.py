@@ -153,9 +153,7 @@ AVAILABLE_TRANSFORMATIONS = {
 }
 
 AVAILABLE_ATTACKER_MODELS = {
-    'yolov12': 'YOLOv-12',  
-    'resnet18': 'ResNet-18',
-    'yolov8': 'YOLOv-8'
+    'resnet18': 'ResNet18'
 }
 
 @app.before_request
@@ -187,12 +185,8 @@ def index_visual_attack():
     if request.form.get('refresh_captcha'):
         session['needs_new_captcha'] = True
 
-    # Get Attacker Model
-    default_attacker_key = list(AVAILABLE_ATTACKER_MODELS.keys())[0]
-    selected_attacker_model_key = request.form.get('attacker_model', session.get('current_attacker_key', default_attacker_key))
-    # Ensure the selected model is valid
-    if selected_attacker_model_key not in AVAILABLE_ATTACKER_MODELS:
-        selected_attacker_model_key = default_attacker_key
+    # Always use ResNet18
+    selected_attacker_model_key = 'resnet18'
     session['current_attacker_key'] = selected_attacker_model_key
 
     # Get transformation count
@@ -216,12 +210,12 @@ def index_visual_attack():
     # Get current transformation details
     current_transform_details = AVAILABLE_TRANSFORMATIONS.get(selected_transformation_key, AVAILABLE_TRANSFORMATIONS[default_transform_key])
     current_transform_name = current_transform_details["name"]
-    current_transform_accuracy = current_transform_details["accuracy"][selected_attacker_model_key]
+    current_transform_accuracy = current_transform_details.get("accuracy", {}).get(selected_attacker_model_key)
 
     # Sort transformations by accuracy for the selected model
     sorted_transformations = dict(sorted(
         AVAILABLE_TRANSFORMATIONS.items(),
-        key=lambda x: x[1]["accuracy"][selected_attacker_model_key],
+        key=lambda x: x[1].get("accuracy", {}).get(selected_attacker_model_key, 0) or 0,
         reverse=True
     ))
 

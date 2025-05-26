@@ -5,11 +5,7 @@
       "enabled": true,
       "is_demo": true,
       "parameters": {},
-      "accuracy": {
-        "resnet18": 100.0,
-        "yolov8": 100.0,
-        "yolov12": 100.0
-      }
+      "accuracy": {}
     },
     "cartoon": {
       "name": "Cartoon Effect",

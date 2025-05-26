@@ -248,15 +248,6 @@
         <form method="POST" action="{{ url_for('index_visual_attack') }}">
             <div class="form-controls">
                 <div class="form-group">
-                    <label for="attacker_model">Select Attacker Model:</label>
-                    <select class="form-control" id="attacker_model" name="attacker_model" onchange="this.form.submit()">
-                        {% for key, name in attacker_models_options.items() %}
-                        <option value="{{ key }}" {% if selected_attacker_model == key %}selected{% endif %}>{{ name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="form-group">
                     <label for="transformation_count">Number of Transformations:</label>
                     <select class="form-control" id="transformation_count" name="transformation_count" onchange="this.form.submit()">
                         <option value="1" {% if selected_transformation_count == 1 %}selected{% endif %}>1</option>
@@ -267,12 +258,13 @@
 
                 <div class="form-group">
                     <label for="grid_size">Grid Size:</label>
-                    <select class="form-control" id="grid_size" name="grid_size" onchange="this.form.submit()">
+                    <select class="form-control" id="grid_size" name="grid_size" onchange="document.getElementById('refresh_on_grid_change').value='true'; this.form.submit()">
                         <option value="3" {% if selected_grid_size == 3 %}selected{% endif %}>3x3</option>
                         <option value="4" {% if selected_grid_size == 4 %}selected{% endif %}>4x4</option>
                         <option value="5" {% if selected_grid_size == 5 %}selected{% endif %}>5x5</option>
                         <option value="6" {% if selected_grid_size == 6 %}selected{% endif %}>6x6</option>
                     </select>
+                    <input type="hidden" id="refresh_on_grid_change" name="refresh_captcha" value="false">
                 </div>
 
                 {% if selected_transformation_count == 1 %}
@@ -281,7 +273,7 @@
                     <select class="form-control" id="transformation_type" name="transformation_type" onchange="this.form.submit()">
                         {% for key, details in transformations_options.items() %}
                         <option value="{{ key }}" {% if key == selected_transformation_key %}selected{% endif %}>
-                            {{ details.name }} ({{ "%.2f"|format(details.accuracy[selected_attacker_model]) }}%)
+                            {{ details.name }}{% if details.accuracy and details.accuracy['resnet18'] is not none %} ({{ "%.2f"|format(details.accuracy['resnet18']) }}%){% endif %}
                         </option>
                         {% endfor %}
                     </select>
@@ -297,16 +289,16 @@
         </form>
 
         <p class="description">
-            Selected Model: <strong>{{ attacker_models_options[selected_attacker_model] }}</strong><br>
+            Model: <strong>ResNet18</strong><br>
             Number of Transformations: <strong>{{ selected_transformation_count }}</strong><br>
             Grid Size: <strong>{{ selected_grid_size }}x{{ selected_grid_size }}</strong><br>
             {% if selected_transformation_count == 1 %}
-            Selected Transformation: <strong>{{ current_transform_name }}</strong> (Accuracy: {{ "%.2f"|format(current_transform_accuracy) }}%)
+            Selected Transformation: <strong>{{ current_transform_name }}</strong>{% if current_transform_accuracy is not none %} (Accuracy: {{ "%.2f"|format(current_transform_accuracy) }}%){% endif %}
             {% else %}
             Transformations will be randomly selected from:
             {% for key, details in transformations_options.items() %}
                 {% if key != 'none' %}
-                    {{ details.name }} ({{ "%.2f"|format(details.accuracy[selected_attacker_model]) }}%)
+                    {{ details.name }}{% if details.accuracy and details.accuracy['resnet18'] is not none %} ({{ "%.2f"|format(details.accuracy['resnet18']) }}%){% endif %}
                     {%- if not loop.last %}, {% endif %}
                 {% endif %}
             {% endfor %}
