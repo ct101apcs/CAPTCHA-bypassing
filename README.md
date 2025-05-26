@@ -6,7 +6,7 @@ This project demonstrates CAPTCHA bypassing techniques using machine learning mo
 
 - Python 3.8 or higher
 - pip (Python package manager)
-- ngrok (for IP detection testing)
+- ngrok (optional to share the website)
 
 ## Installation
 
@@ -14,6 +14,29 @@ This project demonstrates CAPTCHA bypassing techniques using machine learning mo
 ```bash
 git clone https://github.com/ct101apcs/CAPTCHA-bypassing.git
 cd CAPTCHA-bypassing
+```
+### 2. Download the Datasets
+
+Please refer to this [link](https://www.kaggle.com/datasets/iamsouravbanerjee/animal-image-dataset-90-different-animals)
+
+and download the dataset named "archive.zip". Extract it to the "Datasets" directory of the cloned repository, ensure the stuctrue is as follows:
+
+## Project Structure
+
+```
+CAPTCHA-bypassing/
+├── Datasets/                 # Completely similar to the original repo
+   ├── archive/            
+      ├── animals/
+         ├── animals/
+   ├── animal_dataset.py
+   ├── classes.py
+├── captcha_generator.py      # CAPTCHA generation logic
+├── model_predictionss.py     # Model prediction logic
+├── app.py                    # Main Flask application
+├── run_with_ngrok.py         # Helper script for ngrok integration
+├── requirements.txt          # Python dependencies
+└── templates/                # HTML templates
 ```
 
 ### 2. Set Up Python Virtual Environment
@@ -88,7 +111,7 @@ ngrok authtoken YOUR_TOKEN_HERE
 
 ## Running the Application
 
-### If you need to work with the IP detection (run with ngrok):
+### If you need to run the website on different devices (run with ngrok):
 
 The helper script will automatically start both ngrok and the Flask application:
 
@@ -101,42 +124,19 @@ This will:
 2. Open the URL in your default browser
 3. Start the Flask application
 
-### If you don't need ngrok:
+### If you don't need ngrok (just locally host):
 
 Run the Flask application directly:
 ```bash
 flask run
 ```
 
-3. Access the application through the ngrok URL shown in the ngrok terminal
-
 ## Features
 
 - CAPTCHA generation and processing
 - Multiple transformation options
-- IP detection through ngrok
 - Real-time model predictions
 - Session management
-- Access logging
-
-## Project Structure
-
-```
-CAPTCHA-bypassing/
-├── Datasets/                 # Completely similar to the original repo
-   ├── archive/            
-      ├── animals/
-         ├── animals/
-   ├── animal_dataset.py
-   ├── classes.py
-├── captcha_generator.py      # CAPTCHA generation logic
-├── model_predictionss.py     # Model prediction logic
-├── app.py                    # Main Flask application
-├── run_with_ngrok.py         # Helper script for ngrok integration
-├── requirements.txt          # Python dependencies
-├── access_logs/              # Directory for IP access logs
-└── templates/                # HTML templates
-```
 
 ## Troubleshooting
 
