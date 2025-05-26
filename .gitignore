@@ -12,5 +12,5 @@ venv.bak/
 .vscode/
 *.sqlite3
 *.log
-Datasets/
+Datasets/archive/
 access_logs/
