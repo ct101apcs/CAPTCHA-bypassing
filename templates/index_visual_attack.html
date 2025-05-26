@@ -91,19 +91,6 @@
             border-color: #dc3545;
         }
 
-        .confidence-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: rgba(0, 0, 0, 0.75);
-            color: white;
-            font-size: 0.8em;
-            text-align: center;
-            padding: 4px 0;
-            opacity: 0.9;
-        }
-
         .message {
             padding: 15px;
             margin-top: 20px;
@@ -206,23 +193,6 @@
             padding: 4px;
         }
 
-        /* Adjust confidence overlay font size based on grid size */
-        .captcha-grid[style*="--grid-size: 3"] .confidence-overlay {
-            font-size: 0.8em;
-        }
-
-        .captcha-grid[style*="--grid-size: 4"] .confidence-overlay {
-            font-size: 0.7em;
-        }
-
-        .captcha-grid[style*="--grid-size: 5"] .confidence-overlay {
-            font-size: 0.6em;
-        }
-
-        .captcha-grid[style*="--grid-size: 6"] .confidence-overlay {
-            font-size: 0.5em;
-        }
-
         /* Adjust panel padding based on grid size */
         .panel[data-grid-size="3"] {
             padding: 20px;
@@ -320,9 +290,6 @@
                         {% else %}
                         <span style="display:flex; align-items:center; justify-content:center; height:100%; color:#777;">Img {{i+1}}</span>
                         {% endif %}
-                        <div class="confidence-overlay">
-                            {% if prediction.is_selected %}Sel {% endif %}Conf: {{ "%.2f"|format(prediction.confidence) }}
-                        </div>
                     </div>
                 {% endfor %}
             </div>
